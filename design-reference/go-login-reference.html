@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GO Enterprises – Inventory sign in (design reference)</title>
+<!--
+  DESIGN REFERENCE ONLY (static HTML/CSS). Do not ship this file.
+  Rebuild it in the real app (Blade + Tailwind or the project's existing stack).
+  Behaviours not shown here are described in PROMPT.md:
+  password show/hide toggle, validation message, kiosk sign-in.
+-->
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:Inter,system-ui,sans-serif}
+.field:focus-within{border-color:#0B6B33 !important;box-shadow:0 0 0 3px rgba(11,107,51,0.18)}
+.btn-primary:hover{filter:brightness(0.9)}
+.btn-ghost:hover{background:#F3F6F2 !important}
+.eye:hover{color:#111712 !important}
+input::placeholder{color:#66716B}
+button:focus-visible,input[type="checkbox"]:focus-visible{outline:3px solid #FFC400;outline-offset:2px}
+@media (max-width:960px){
+.left{display:none !important}
+.right{padding:24px 16px !important}
+.card{padding:40px 24px 32px !important}
+}
+</style>
+</head>
+<body>
+<div style="display:flex;flex-wrap:wrap;min-height:100vh;width:100%;background:#EEF1EC;font-family:Inter,system-ui,sans-serif;color:#111712">
+
+<section class="left" style="flex:1.2 1 560px;min-width:0;box-sizing:border-box;padding:48px 72px;display:flex;flex-direction:column;justify-content:space-between;gap:40px;background-color:#0A2A18;background-image:radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1.6px);background-size:24px 24px;color:#ffffff">
+
+<div style="display:flex;align-items:center;gap:14px">
+<img src="images/go-logo-icon.png" alt="" style="height:46px;width:auto;display:block">
+<span style="font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:30px;letter-spacing:0.01em;color:#ffffff">GO Inventory</span>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div style="font-size:13px;font-weight:600;letter-spacing:0.18em;color:#FFC400">HARDWARE &amp; ELECTRICAL SUPPLIES</div>
+<h1 style="margin:0;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:800;font-size:88px;line-height:0.95;letter-spacing:-0.005em;color:#ffffff">Inventory System</h1>
+<div style="display:flex;width:100%;max-width:440px;height:5px;border-radius:3px;overflow:hidden;margin-top:6px">
+<div style="flex:1;background:#FFC400"></div>
+<div style="flex:1;background:#2B45B5"></div>
+<div style="flex:1;background:#D9232D"></div>
+</div>
+<p style="margin:10px 0 0;max-width:560px;font-size:19px;line-height:1.55;color:rgba(255,255,255,0.8)">Track stock, bins and suppliers across every hardware and electrical aisle in one organized system your whole team can trust.</p>
+</div>
+
+<div style="position:relative;width:100%;max-width:500px;padding-bottom:22px">
+<svg viewBox="0 0 560 318" width="100%" aria-hidden="true" style="display:block;height:auto">
+<rect x="8" y="6" width="6" height="303" fill="#3C6A52" />
+<rect x="546" y="6" width="6" height="303" fill="#3C6A52" />
+<rect x="8" y="6" width="544" height="6" fill="#3C6A52" />
+<rect x="8" y="106" width="544" height="6" fill="#3C6A52" />
+<rect x="8" y="206" width="544" height="6" fill="#3C6A52" />
+<rect x="8" y="303" width="544" height="6" fill="#3C6A52" />
+<rect x="0" y="312" width="560" height="4" fill="#3C6A52" />
+
+<rect x="26" y="48" width="84" height="58" rx="3" fill="#2F5C45" />
+<rect x="62" y="48" width="14" height="58" fill="#3B6B52" />
+<rect x="34" y="89" width="20" height="9" rx="2" fill="#CFE0D6" />
+<rect x="124" y="74" width="56" height="32" rx="3" fill="#4B8A68" />
+<rect x="132" y="89" width="18" height="8" rx="2" fill="#CFE0D6" />
+<rect x="194" y="30" width="100" height="76" rx="3" fill="#234A36" />
+<rect x="234" y="30" width="14" height="76" fill="#2F5C45" />
+<rect x="202" y="89" width="22" height="9" rx="2" fill="#CFE0D6" />
+<rect x="308" y="62" width="70" height="44" rx="3" fill="#F2B81C" />
+<rect x="334" y="62" width="14" height="44" fill="#F7D36B" />
+<rect x="316" y="89" width="18" height="8" rx="2" fill="#FFFFFF" />
+<rect x="392" y="44" width="100" height="62" rx="3" fill="#3F7A5C" />
+<rect x="432" y="44" width="14" height="62" fill="#4B8A68" />
+<rect x="400" y="89" width="22" height="9" rx="2" fill="#CFE0D6" />
+<rect x="502" y="74" width="40" height="32" rx="3" fill="#2B45B5" />
+<rect x="509" y="90" width="16" height="8" rx="2" fill="#C9D2F5" />
+
+<rect x="26" y="134" width="110" height="72" rx="3" fill="#2F5C45" />
+<rect x="72" y="134" width="14" height="72" fill="#3B6B52" />
+<rect x="34" y="189" width="22" height="9" rx="2" fill="#CFE0D6" />
+<circle cx="190" cy="172" r="34" fill="#2B45B5" />
+<circle cx="190" cy="172" r="24" fill="#22389A" />
+<circle cx="190" cy="172" r="10" fill="#0A2A18" />
+<circle cx="190" cy="172" r="4" fill="#FFC400" />
+<rect x="240" y="160" width="62" height="46" rx="3" fill="#4B8A68" />
+<rect x="248" y="189" width="20" height="9" rx="2" fill="#CFE0D6" />
+<rect x="316" y="142" width="78" height="64" rx="3" fill="#F2B81C" />
+<path d="M360 150 L343 178 H353 L347 198 L367 168 H356 Z" fill="#2B45B5" />
+<rect x="408" y="192" width="124" height="14" rx="7" fill="#3F7A5C" />
+<rect x="408" y="177" width="124" height="14" rx="7" fill="#4B8A68" />
+<rect x="408" y="162" width="124" height="14" rx="7" fill="#2F5C45" />
+
+<rect x="26" y="263" width="60" height="40" rx="3" fill="#234A36" />
+<rect x="34" y="286" width="18" height="8" rx="2" fill="#CFE0D6" />
+<rect x="100" y="225" width="100" height="78" rx="3" fill="#2F5C45" />
+<rect x="140" y="225" width="14" height="78" fill="#3B6B52" />
+<rect x="108" y="286" width="22" height="9" rx="2" fill="#CFE0D6" />
+<rect x="216" y="252" width="46" height="51" rx="3" fill="#C8202B" />
+<rect x="213" y="248" width="52" height="7" rx="2" fill="#8F1520" />
+<rect x="216" y="270" width="46" height="14" fill="#FFC400" />
+<rect x="278" y="245" width="84" height="58" rx="3" fill="#4B8A68" />
+<rect x="286" y="286" width="22" height="9" rx="2" fill="#CFE0D6" />
+<rect x="376" y="233" width="70" height="70" rx="3" fill="#234A36" />
+<rect x="402" y="233" width="14" height="70" fill="#2F5C45" />
+<rect x="384" y="286" width="18" height="9" rx="2" fill="#CFE0D6" />
+<rect x="460" y="263" width="76" height="40" rx="3" fill="#F2B81C" />
+<rect x="486" y="263" width="14" height="40" fill="#F7D36B" />
+<rect x="468" y="286" width="16" height="8" rx="2" fill="#FFFFFF" />
+</svg>
+
+<div style="position:absolute;left:-16px;bottom:0;display:flex;align-items:center;gap:14px;padding:14px 20px 14px 14px;border-radius:14px;background:#0F3A22;border:1px solid rgba(255,255,255,0.14);box-shadow:0 10px 30px rgba(0,0,0,0.3)">
+<div style="flex:none;width:42px;height:42px;border-radius:50%;background:rgba(255,196,0,0.16);display:flex;align-items:center;justify-content:center;color:#FFC400">
+<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px">
+<span style="font-size:16px;font-weight:600;color:#ffffff">Reorder alert</span>
+<span style="font-size:14px;color:rgba(255,255,255,0.75)">Items below their minimum level</span>
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:28px">
+<div style="display:grid;grid-template-columns:repeat(3, minmax(0, 1fr));gap:24px">
+<div style="display:flex;gap:12px;align-items:flex-start">
+<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#FFC400" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:1px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M16 13H8" /><path d="M16 17H8" /><path d="M10 9H8" /></svg>
+<div style="display:flex;flex-direction:column;gap:4px">
+<span style="font-size:16px;font-weight:600;color:#ffffff">Every change is logged</span>
+<span style="font-size:14px;line-height:1.45;color:rgba(255,255,255,0.72)">See who moved, counted or adjusted any item.</span>
+</div>
+</div>
+<div style="display:flex;gap:12px;align-items:flex-start">
+<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#FFC400" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:1px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+<div style="display:flex;flex-direction:column;gap:4px">
+<span style="font-size:16px;font-weight:600;color:#ffffff">Access by role</span>
+<span style="font-size:14px;line-height:1.45;color:rgba(255,255,255,0.72)">Staff see only what their job needs.</span>
+</div>
+</div>
+<div style="display:flex;gap:12px;align-items:flex-start">
+<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#FFC400" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;margin-top:1px"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>
+<div style="display:flex;flex-direction:column;gap:4px">
+<span style="font-size:16px;font-weight:600;color:#ffffff">Live stock levels</span>
+<span style="font-size:14px;line-height:1.45;color:rgba(255,255,255,0.72)">Counts update as items move.</span>
+</div>
+</div>
+</div>
+<div style="padding-top:20px;border-top:1px solid rgba(255,255,255,0.12);font-size:12px;font-weight:600;letter-spacing:0.16em;color:rgba(255,255,255,0.7)">RESIDENTIAL • COMMERCIAL • INDUSTRIAL <span style="margin-left:10px;color:#FF7A82">SINCE 2015</span></div>
+</div>
+</section>
+
+<section class="right" style="flex:1 1 400px;min-width:0;box-sizing:border-box;padding:48px 32px;display:flex;align-items:center;justify-content:center;background:#EEF1EC">
+<div class="card" style="position:relative;overflow:hidden;box-sizing:border-box;width:100%;max-width:500px;padding:52px 48px 36px;background:#ffffff;border:1px solid #E1E6DF;border-radius:24px;box-shadow:0 1px 2px rgba(10,42,24,0.05), 0 16px 48px rgba(10,42,24,0.07)">
+
+<div style="position:absolute;top:0;left:0;right:0;height:5px;display:flex">
+<div style="flex:1;background:#FFC400"></div>
+<div style="flex:1;background:#2B45B5"></div>
+<div style="flex:1;background:#D9232D"></div>
+</div>
+
+<img src="images/go-logo-full.png" alt="GO Enterprises – Hardware &amp; Electrical Supplies" style="display:block;width:210px;height:auto;margin-bottom:32px">
+
+<h2 style="margin:0;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:800;font-size:46px;line-height:1;color:#111712">Sign in</h2>
+<p style="margin:10px 0 28px;font-size:16px;color:#55605A">Use your account to open the inventory.</p>
+
+<div style="display:flex;flex-direction:column;gap:20px">
+
+<div>
+<label for="username" style="display:block;margin-bottom:8px;font-size:15px;font-weight:600;color:#111712">Username</label>
+<div class="field" style="display:flex;align-items:center;gap:12px;height:56px;padding:0 16px;box-sizing:border-box;border:1px solid #D2D9D0;border-radius:12px;background:#ffffff">
+<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:#55605A"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+<input id="username" type="text" autocomplete="username" placeholder="Enter your username" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font-family:inherit;font-size:16px;color:#111712">
+</div>
+</div>
+
+<div>
+<label for="password" style="display:block;margin-bottom:8px;font-size:15px;font-weight:600;color:#111712">Password</label>
+<div class="field" style="display:flex;align-items:center;gap:12px;height:56px;padding:0 6px 0 16px;box-sizing:border-box;border:1px solid #D2D9D0;border-radius:12px;background:#ffffff">
+<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none;color:#55605A"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+<input id="password" type="password" autocomplete="current-password" placeholder="Enter your password" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font-family:inherit;font-size:16px;color:#111712">
+<button type="button" class="eye" aria-label="Show password" style="flex:none;width:44px;height:44px;border:0;border-radius:8px;background:transparent;color:#55605A;cursor:pointer;display:flex;align-items:center;justify-content:center">
+
+<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></svg>
+
+
+</button>
+</div>
+</div>
+
+<div style="display:flex;align-items:center;gap:12px">
+<input id="keep" type="checkbox" style="width:20px;height:20px;margin:0;accent-color:#0B6B33;cursor:pointer">
+<label for="keep" style="font-size:16px;color:#111712;cursor:pointer">Keep me signed in on this device</label>
+</div>
+
+
+
+
+<button type="button" class="btn-primary" style="width:100%;height:56px;border:0;border-radius:12px;background:#0B6B33;color:#ffffff;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer">Sign in</button>
+</div>
+
+<div style="height:1px;background:#E4E9E2;margin:28px 0 24px"></div>
+
+<button type="button" class="btn-ghost" style="width:100%;height:56px;display:flex;align-items:center;justify-content:center;gap:10px;border:1px solid #D2D9D0;border-radius:12px;background:#ffffff;color:#111712;font-family:inherit;font-size:17px;font-weight:600;cursor:pointer">
+<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="2" width="14" height="20" rx="2" /><path d="M12 18h.01" /></svg>
+Kiosk sign in
+</button>
+<p style="margin:14px 0 0;text-align:center;font-size:14px;color:#55605A">For the shared tablet in the store or warehouse.</p>
+
+<p style="margin:28px 0 0;text-align:center;font-size:13px;color:#55605A">© 2026 GO Enterprises. All rights reserved.</p>
+</div>
+</section>
+
+</div>
+</body>
+</html>
