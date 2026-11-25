@@ -1,0 +1,498 @@
+@import "tailwindcss";
+
+/* ==========================================================================
+   Design tokens
+   One place for colour, type, radius, shadow and motion. Every component
+   reads these, so the whole app changes look from this block alone.
+   ========================================================================== */
+@theme {
+    /* --- Typography ------------------------------------------------------ */
+    --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+        sans-serif;
+
+    /* Used for the few large headings that should feel printed, not typed:
+       the mark and the company name on the kiosk panel, and the "Sign in"
+       heading on its card. */
+    --font-display: "Playfair Display", ui-serif, Georgia, "Times New Roman",
+        serif;
+
+    --text-2xs: 0.6875rem;
+    --text-2xs--line-height: 1rem;
+    --text-2xs--letter-spacing: 0.04em;
+
+    /* --- Brand ramp (indigo / violet) ------------------------------------ */
+    --color-brand-50: oklch(0.97 0.014 286);
+    --color-brand-100: oklch(0.94 0.03 286);
+    --color-brand-200: oklch(0.89 0.055 286);
+    --color-brand-300: oklch(0.81 0.09 286);
+    --color-brand-400: oklch(0.71 0.14 286);
+    --color-brand-500: oklch(0.62 0.185 286);
+    --color-brand-600: oklch(0.55 0.2 286);
+    --color-brand-700: oklch(0.48 0.19 286);
+    --color-brand-800: oklch(0.4 0.155 286);
+    --color-brand-900: oklch(0.33 0.12 286);
+
+    /* --- Neutral surfaces and ink ---------------------------------------- */
+    --color-canvas: oklch(0.975 0.004 286);
+    --color-surface: oklch(1 0 0);
+    --color-surface-muted: oklch(0.985 0.003 286);
+    --color-surface-sunken: oklch(0.955 0.005 286);
+
+    --color-ink: oklch(0.24 0.02 286);
+    --color-ink-muted: oklch(0.52 0.016 286);
+    --color-ink-subtle: oklch(0.66 0.013 286);
+    --color-ink-inverse: oklch(0.99 0 0);
+
+    --color-line: oklch(0.92 0.005 286);
+    --color-line-strong: oklch(0.86 0.007 286);
+
+    /* --- Status ---------------------------------------------------------- */
+    --color-success-50: oklch(0.96 0.03 162);
+    --color-success-500: oklch(0.68 0.14 162);
+    --color-success-700: oklch(0.52 0.12 162);
+
+    --color-warning-50: oklch(0.97 0.04 85);
+    --color-warning-500: oklch(0.78 0.15 85);
+    --color-warning-700: oklch(0.58 0.13 70);
+
+    --color-danger-50: oklch(0.96 0.025 25);
+    --color-danger-500: oklch(0.62 0.21 25);
+    --color-danger-700: oklch(0.5 0.19 25);
+
+    --color-info-50: oklch(0.96 0.03 235);
+    --color-info-500: oklch(0.65 0.16 235);
+    --color-info-700: oklch(0.5 0.15 235);
+
+    /* --- Sign-in pages (GO Enterprises) ---------------------------------
+       The client's sign-in mockup (design/login-mockup.png, 18 November
+       2026): a header bar with the round logo, the green hero on the left,
+       the white card on the right. Used only by Layouts/SignInLayout.vue,
+       Components/SignInField.vue and the two pages that wear them,
+       Pages/Auth/Login.vue and Pages/Auth/Kiosk.vue. `goe-` is GO
+       Enterprises, and keeps clear of the app's own `brand`, `ink` and
+       `line`, whose brand ramp Theme Settings rewrites at run time. The
+       hero's two greens are sampled from the mockup, so the illustration
+       cut from it (public/images/login-hero.png) meets the panel with no
+       seam. Every text colour here is at least 4.5:1 on its own
+       background.
+       --------------------------------------------------------------------- */
+    --color-goe-page: #f7f7f3; /* the page behind the header and the card */
+    --color-goe-hero-from: #083725; /* the hero, bottom-left corner */
+    --color-goe-hero-to: #05472d; /* the hero, top-right corner */
+    --color-goe-yellow: #f9c71c; /* "Business in motion.", the badge, "Since 2015", focus outline */
+    --color-goe-button: #fec30f; /* Sign in */
+    --color-goe-button-hover: #f2b600;
+    --color-goe-button-ink: #0b3d26;
+    --color-goe-brand-ink: #0f2a1c; /* GO ENTERPRISES in the header */
+    --color-goe-subhead: #cfe6d6;
+    --color-goe-mint: #a3d9b1; /* "control." */
+    --color-goe-green: #174a31; /* card label, icon box, Forgot password?, checkbox */
+    --color-goe-green-dark: #10361f;
+    --color-goe-green-tint: #eef8f1; /* inside the icon box */
+    --color-goe-ink: #121815;
+    --color-goe-muted: #5b625e;
+    --color-goe-placeholder: #6b716d;
+    --color-goe-rule: #6a6b67; /* the two dividers in the header */
+    --color-goe-line: #cfd2cd; /* input and Kiosk button border */
+    --color-goe-card-line: #e7e8e3;
+    --color-goe-divider: #dcdfda;
+    --color-goe-hover: #f4f6f4; /* Kiosk sign in on hover */
+    --color-goe-error: #b3261e;
+    --color-goe-focus: rgb(249 199 28 / 0.45); /* the glow round a focused field */
+
+    /* --- Kiosk identity --------------------------------------------------
+       The kiosk and error screens (Layouts/GuestLayout.vue) keep a navy and
+       gold identity of their own. They do not follow the brand colour an
+       administrator picks for the inside of the app.
+       --------------------------------------------------------------------- */
+    --color-navy-700: oklch(0.36 0.058 264);
+    --color-navy-800: oklch(0.29 0.055 264);
+    --color-navy-900: oklch(0.235 0.048 264);
+    --color-navy-950: oklch(0.185 0.04 264);
+
+    --color-gold-200: oklch(0.9 0.055 88);
+    --color-gold-300: oklch(0.85 0.08 87);
+    --color-gold-400: oklch(0.8 0.1 86);
+    --color-gold-500: oklch(0.73 0.115 84);
+
+    /* --- Radius ---------------------------------------------------------- */
+    --radius-field: 0.625rem;
+    --radius-card: 0.875rem;
+    --radius-panel: 1.125rem;
+
+    /* --- Elevation ------------------------------------------------------- */
+    --shadow-xs-soft: 0 1px 2px 0 oklch(0.24 0.02 286 / 0.05);
+    --shadow-card: 0 1px 2px 0 oklch(0.24 0.02 286 / 0.04),
+        0 1px 3px 0 oklch(0.24 0.02 286 / 0.06);
+    --shadow-raised: 0 2px 4px -1px oklch(0.24 0.02 286 / 0.06),
+        0 8px 16px -4px oklch(0.24 0.02 286 / 0.08);
+    --shadow-popover: 0 4px 8px -2px oklch(0.24 0.02 286 / 0.08),
+        0 16px 32px -8px oklch(0.24 0.02 286 / 0.12);
+    --shadow-brand: 0 1px 2px 0 oklch(0.55 0.2 286 / 0.2),
+        0 8px 20px -6px oklch(0.55 0.2 286 / 0.35);
+
+    /* --- Motion ---------------------------------------------------------- */
+    --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in-out-soft: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Layout measurements the shell and the sidebar share. */
+:root {
+    --sidebar-w: 16rem;
+    --sidebar-w-collapsed: 4.5rem;
+    --topbar-h: 4rem;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+@layer base {
+    /* Tailwind v4 defaults borders to currentColor. Reset to the line token
+       so plain `border` utilities read as a hairline, not as text colour. */
+    *,
+    ::before,
+    ::after {
+        border-color: var(--color-line);
+    }
+
+    html {
+        -webkit-tap-highlight-color: transparent;
+        scrollbar-gutter: stable;
+    }
+
+    body {
+        font-feature-settings: "cv11", "ss01";
+    }
+
+    /* A visible, on-brand focus ring on every interactive element. */
+    :focus-visible {
+        outline: 2px solid var(--color-brand-500);
+        outline-offset: 2px;
+    }
+
+    ::selection {
+        background-color: var(--color-brand-100);
+        color: var(--color-brand-900);
+    }
+}
+
+/* ==========================================================================
+   Components
+   ========================================================================== */
+@layer components {
+    .card {
+        background-color: var(--color-surface);
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-card);
+        box-shadow: var(--shadow-card);
+    }
+
+    /* Thin, quiet scrollbars inside panels. */
+    .scrollbar-slim {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-line-strong) transparent;
+    }
+
+    .scrollbar-slim::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    .scrollbar-slim::-webkit-scrollbar-thumb {
+        background-color: var(--color-line-strong);
+        border-radius: 9999px;
+    }
+
+    .scrollbar-slim::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
+}
+
+/* ==========================================================================
+   Utilities
+   ========================================================================== */
+
+/*
+ * A sideways strip whose bar is always there to see and drag — the till's
+ * category tabs. Styled through the ::-webkit-scrollbar parts alone on
+ * purpose: Chrome drops those as soon as `scrollbar-width` is set, and on a
+ * Mac it then draws an overlay bar that hides until something scrolls.
+ * Firefox has no such parts and gets the standard thin bar instead.
+ */
+@utility scrollbar-bar {
+    &::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background-color: var(--color-line);
+        border-radius: 9999px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: var(--color-ink-subtle);
+        border-radius: 9999px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+        background-color: var(--color-ink-muted);
+    }
+
+    @supports not selector(::-webkit-scrollbar) {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-ink-subtle) var(--color-line);
+    }
+}
+
+/*
+ * The sign-in pages' one unit (Layouts/SignInLayout.vue). Every measurement
+ * there is a number of `--u`, so the whole page shrinks as one piece. Below
+ * 1024 px it is 1 px and the phone and tablet layouts read as written. From
+ * 1024 px up it is the mockup's pixel (1586 × 992) made small enough that
+ * the page fits the window across (1586 units) and down (1085 units: the
+ * card with the kiosk button, and 2 to spare for rounding), never larger than 1 px and never below 0.6 px
+ * — under that the page scrolls rather than become unreadable.
+ */
+@utility goe-scale {
+    --u: 1px;
+
+    @media (width >= 64rem) {
+        --u: max(0.6px, min(1px, 100vw / 1586, 100dvh / 1085));
+    }
+}
+
+/* Sweeping highlight used by every skeleton loader. */
+@utility shimmer {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--color-surface-sunken);
+
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background-image: linear-gradient(
+            90deg,
+            transparent,
+            oklch(1 0 0 / 0.65),
+            transparent
+        );
+        animation: shimmer-sweep 1.6s infinite;
+    }
+}
+
+@keyframes shimmer-sweep {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* ==========================================================================
+   Theme settings
+   The server writes data-density and data-transitions onto <html> from the
+   Theme Settings page. Colour and radius arrive as token overrides, so they
+   need no rules here.
+   ========================================================================== */
+:root[data-density="compact"] {
+    --topbar-h: 3.25rem;
+}
+
+:root[data-density="compact"] table :is(td, th) {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+:root[data-transitions="off"] .page-enter-active,
+:root[data-transitions="off"] .page-leave-active {
+    transition: none;
+}
+
+/* ==========================================================================
+   Inertia page transitions
+   ========================================================================== */
+.page-enter-active,
+.page-leave-active {
+    transition:
+        opacity 180ms var(--ease-in-out-soft),
+        transform 220ms var(--ease-out-quint);
+}
+
+.page-enter-from {
+    opacity: 0;
+    transform: translateY(8px);
+}
+
+.page-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .page-enter-active,
+    .page-leave-active {
+        transition: none;
+    }
+
+    .shimmer::after {
+        animation: none;
+    }
+}
+
+/* ==========================================================================
+   SweetAlert2 — themed with the tokens above
+   ========================================================================== */
+.swal2-container {
+    z-index: 100000;
+}
+
+.maf-swal-popup {
+    border-radius: var(--radius-panel) !important;
+    border: 1px solid var(--color-line);
+    box-shadow: var(--shadow-popover) !important;
+    font-family: var(--font-sans) !important;
+    padding: 1.75rem 1.5rem 1.5rem !important;
+}
+
+.maf-swal-title {
+    font-size: 1.0625rem !important;
+    font-weight: 600 !important;
+    color: var(--color-ink) !important;
+}
+
+.maf-swal-text {
+    font-size: 0.875rem !important;
+    color: var(--color-ink-muted) !important;
+    line-height: 1.55 !important;
+}
+
+.maf-swal-actions {
+    gap: 0.5rem !important;
+    margin-top: 1.25rem !important;
+}
+
+.maf-swal-confirm,
+.maf-swal-cancel,
+.maf-swal-deny {
+    border-radius: var(--radius-field) !important;
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    padding: 0.5625rem 1.125rem !important;
+    box-shadow: none !important;
+    transition: filter 150ms var(--ease-in-out-soft);
+}
+
+.maf-swal-confirm:hover,
+.maf-swal-cancel:hover,
+.maf-swal-deny:hover {
+    filter: brightness(0.95);
+}
+
+.maf-swal-cancel {
+    background-color: var(--color-surface) !important;
+    border: 1px solid var(--color-line-strong) !important;
+    color: var(--color-ink) !important;
+}
+
+.maf-swal-toast {
+    border-radius: var(--radius-card) !important;
+    border: 1px solid var(--color-line) !important;
+    box-shadow: var(--shadow-raised) !important;
+    font-family: var(--font-sans) !important;
+    padding: 0.875rem 1rem !important;
+}
+
+.maf-swal-toast .swal2-title {
+    font-size: 0.875rem !important;
+    font-weight: 500 !important;
+    color: var(--color-ink) !important;
+    margin: 0 !important;
+}
+
+.maf-swal-toast .swal2-timer-progress-bar {
+    background: var(--color-brand-500) !important;
+}
+
+/* The audit-trail detail dialog. */
+.maf-audit-heading {
+    margin: 1.25rem 0 0.5rem;
+    text-align: left;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-ink-subtle);
+}
+
+.maf-audit-detail {
+    display: grid;
+    grid-template-columns: minmax(7.5rem, auto) 1fr;
+    gap: 0.5rem 1rem;
+    margin: 0;
+    text-align: left;
+    font-size: 0.8125rem;
+}
+
+.maf-audit-detail dt {
+    color: var(--color-ink-subtle);
+}
+
+.maf-audit-detail dd {
+    margin: 0;
+    color: var(--color-ink);
+    overflow-wrap: anywhere;
+}
+
+.maf-audit-from {
+    color: var(--color-ink-subtle);
+    text-decoration: line-through;
+}
+
+.maf-audit-arrow {
+    margin: 0 0.375rem;
+    color: var(--color-ink-subtle);
+}
+
+.maf-audit-to {
+    font-weight: 500;
+    color: var(--color-success-700);
+}
+
+/* The validation-error list inside the alert. */
+.maf-swal-error-list {
+    margin: 0;
+    padding-left: 1.125rem;
+    text-align: left;
+    font-size: 0.875rem;
+    color: var(--color-ink-muted);
+    line-height: 1.6;
+}
+
+.maf-swal-error-list li::marker {
+    color: var(--color-danger-500);
+}
+
+/* -------------------------------------------------------------------------- */
+/* The printed sale slip                                                      */
+/* -------------------------------------------------------------------------- */
+
+/* Kept in the page by `SlipPrinter.vue`, never seen on screen. While a slip
+   prints, `lib/slip.js` puts `printing-slip` on the body and everything but
+   the slip is left off the paper: the app, the dialogs and the alerts. */
+#sale-slip {
+    display: none;
+}
+
+@media print {
+    body.printing-slip {
+        background: #fff !important;
+    }
+
+    body.printing-slip > :not(#sale-slip) {
+        display: none !important;
+    }
+
+    body.printing-slip #sale-slip {
+        display: block;
+    }
+}

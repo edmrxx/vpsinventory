@@ -1,0 +1,89 @@
+<?php
+
+namespace App\Http\Requests\Customer;
+
+use App\Http\Requests\Concerns\ValidatesCredit;
+use App\Support\MasterInput;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
+
+class UpdateCustomerRequest extends FormRequest
+{
+    use ValidatesCredit;
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        return [
+            'code' => [
+                'required', 'string', 'max:40',
+                'regex:/^[A-Z0-9._-]+$/',
+                Rule::unique('customers', 'code')->ignore($this->route('customer')),
+            ],
+            'name' => ['required', 'string', 'max:160'],
+            'contact_person' => ['nullable', 'string', 'max:160'],
+            'email' => ['nullable', 'email', 'max:160'],
+            'phone' => ['nullable', 'string', 'max:60'],
+            'tin' => ['nullable', 'string', 'max:40'],
+            'address' => ['nullable', 'string', 'max:500'],
+            'notes' => ['nullable', 'string', 'max:1000'],
+            'is_active' => ['required', 'boolean'],
+        ] + $this->creditRules();
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'code.regex' => 'The code may only hold capital letters, numbers, dots, dashes and underscores.',
+        ] + $this->creditMessages();
+    }
+
+    /**
+     * The walk-in customer must stay active, because every counter sale names
+     * it. The policy already refuses the status route; this closes the edit
+     * form, which would otherwise reach the same field.
+     *
+     * @return array<int, callable>
+     */
+    public function after(): array
+    {
+        return [
+            function (Validator $validator) {
+                $customer = $this->route('customer');
+
+                if ($customer->is_walk_in && ! $this->boolean('is_active')) {
+                    $validator->errors()->add(
+                        'is_active',
+                        'The walk-in customer is used by counter sales and must stay active.'
+                    );
+                }
+
+                $this->refuseUnusableCredit($validator, $customer);
+            },
+        ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge(MasterInput::clean($this->all(), [
+            'code' => 'upper',
+            'name' => 'trim',
+            'contact_person' => 'trim',
+            'email' => 'lower',
+            'phone' => 'trim',
+            'tin' => 'upper',
+            'address' => 'trim',
+            'notes' => 'trim',
+        ]));
+
+        $this->merge(['is_active' => $this->boolean('is_active')]);
+
+        $this->prepareCredit();
+    }
+}
