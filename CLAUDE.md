@@ -1159,7 +1159,12 @@ Decisions already taken for the phases ahead, so they are not reopened:
   value from when the page opened and would put the old logo back.
   `App\Support\SettingImage` is the only place it is written or deleted,
   and it deletes only a file it wrote, matched strictly under `settings/`.
-  The browser tab icons are cut from the same upload. The sign-in pages do
+  The browser tab icons are cut from the same upload (with GD; without it
+  none are cut). With no icons cut, the tab falls back to the shipped ones —
+  `public/images/favicon.png`, `apple-touch-icon.png`, `brand-mark.png` (the
+  default `company.logo`) and `public/favicon.ico` — which since 26 November
+  2026 are cut from the round GO logo by `ImageFile::square()`; before, they
+  were a handshake from the template, and the live tab showed it. The sign-in pages do
   **not** follow it: they keep the approved round GO logo,
   `public/images/go-enterprises-logo.png` (11 November 2026), on the login
   and the kiosk alike — both wear `SignInLayout`, redrawn on 18 November 2026

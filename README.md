@@ -13,7 +13,7 @@ following one pattern, which this file describes.
 
 | Tool | Version used | Note |
 |---|---|---|
-| PHP | 8.4 | 8.2 is the minimum for Laravel 12. Needs the `gd`, `zip` and `xmlwriter` extensions: GD shrinks photos, `zip` and `xmlwriter` write the Reports spreadsheet |
+| PHP | 8.4 | 8.2 is the minimum for Laravel 12. Needs the `bcmath`, `gd`, `zip` and `xmlwriter` extensions: `bcmath` does the money and quantity sums (without it every Sales screen is a 500), GD shrinks photos and cuts the tab icons, `zip` and `xmlwriter` write the Reports spreadsheet. `composer.json` requires all four, so `composer install` refuses a server without them |
 | Composer | 2.x | |
 | Node | 22+ | 24 is what this was built on |
 | MySQL / MariaDB | 10.4+ | XAMPP's bundled MariaDB is fine |
@@ -2814,14 +2814,28 @@ data without naming a permission — so a new route cannot be left open quietly.
 
 10. Check `api.token_lifetime_days` on the Settings page. 30 days is the
     default; a shorter life limits what a stolen phone is worth.
-11. **Check PHP has the `zip` extension** (`php -m | grep zip`, or the PHP
-    settings in the host's panel). Without it the Reports spreadsheet and the
-    backups are switched off; the screens say so.
+11. **Check PHP has the `bcmath`, `gd`, `zip` and `xmlwriter` extensions**
+    (`php -m`, or the PHP settings in the host's panel) — for the PHP that
+    serves the site, which can differ from the command line's.
+    `composer install` refuses without them, since `composer.json` requires
+    them; a server whose `vendor/` was copied by hand never asks. Without
+    `bcmath` every Sales screen is a 500 (the first VPS deploy, 26 November
+    2026). Without GD no photo is shrunk and no tab icon is cut from an
+    uploaded logo, so the tab shows the shipped GO icon. Without `zip` the
+    Reports spreadsheet and the backups are switched off; the screens say so.
+    On Ubuntu: `sudo apt install php8.4-bcmath php8.4-gd php8.4-zip php8.4-xml`,
+    then restart PHP-FPM.
 12. **Add the scheduler's cron job** if backups should run by themselves:
     `* * * * * cd /path/to/inventory_app && php artisan schedule:run`. Then
     choose *Every day* under Settings → Backup and Export, make one backup
     by hand, download it, and **restore it once** into a spare database
     (README, "Backups") — that is the acceptance check's backup restoration.
+13. **Keep `storage/app` on disk that survives a deploy, and run
+    `php artisan storage:link`.** Git does not carry `storage/app/public`,
+    so a deploy from GitHub arrives without the uploaded logo, the product
+    photos, the loss-report photos and the backups; copy them across once.
+    On a container platform (Coolify, Docker), mount `storage/app` as a
+    persistent volume, or every redeploy deletes them again.
 
 ---
 
