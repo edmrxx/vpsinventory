@@ -2608,6 +2608,40 @@ Two things to know:
   logo was uploaded. Like product photos, it needs the storage link and a
   backup of `storage/app/public`.
 
+### The light and the dark screen (phase 35.1)
+
+Each person picks **Light**, **Dark** or **Same as my device** with the
+switch in the top bar (where a search box that searched nothing used to be;
+icons only on a phone), or with the three icons in the till's header. The choice is kept on their account (`users.appearance`)
+and follows them to any computer; somebody who never chose follows
+**Theme Settings → Default appearance** (Light). It needs no permission —
+it changes only the asker's own look — and writes no audit row.
+
+| Where | Light screen | Dark screen |
+|---|---|---|
+| Every screen inside the app, the till included | as before | dark |
+| Printed pages (quotation, order, statement, Reports, Aging) and the sale slip | white | **white** — the dark tokens sit inside `@media screen` |
+| Sign-in, kiosk sign-in, the signed-out error page | their own design | **their own design** — a guest gets no theme |
+
+**How to keep a new screen dark-ready.** Use the tokens and nothing else:
+`bg-surface`, `bg-canvas`, `text-ink`, `text-ink-muted`, `border-line`, the
+`brand`/`success`/`warning`/`danger`/`info` shades. Three habits break the
+dark screen, and `tests/js/appearance.test.js` fails on each:
+
+- a fixed white, black or Tailwind grey (`bg-white`, `text-black`,
+  `bg-gray-100`) — use the token; white text on a coloured button is
+  `text-ink-inverse`. `print:bg-white` is fine: paper is always white;
+- `bg-ink` as a backdrop — ink turns light; use `bg-scrim`;
+- `hover:bg-brand-700` and the like — `-700` is a light text shade on the
+  dark screen; darken with `hover:brightness-90`.
+
+A logo drawn for white paper takes `data-logo-chip`, which sits it on a
+small white card on the dark screen. A chart drawn by ApexCharts goes
+through `ChartPanel`, which recolours it with `darkChart()`.
+
+Deploying it: `php artisan migrate` (the new column), `config:cache` (the
+new setting) and the new `public/build`. No new permission.
+
 ---
 
 ## 6. Audit trail

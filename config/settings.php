@@ -129,6 +129,18 @@ return [
                     'rules' => ['required', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
                     'hint' => 'Buttons, links and the active menu follow this colour.',
                 ],
+                'theme.appearance' => [
+                    'label' => 'Default appearance',
+                    'type' => 'select',
+                    'default' => 'light',
+                    'options' => [
+                        'light' => 'Light',
+                        'dark' => 'Dark',
+                        'system' => 'Same as the device',
+                    ],
+                    'rules' => ['required', 'in:light,dark,system'],
+                    'hint' => 'For anyone who has not chosen their own with the switch at the top of the screen. Printed pages and the sign-in pages are always light.',
+                ],
                 'theme.radius' => [
                     'label' => 'Corner style',
                     'type' => 'select',

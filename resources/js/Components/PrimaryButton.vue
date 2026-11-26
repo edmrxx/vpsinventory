@@ -15,7 +15,7 @@ const props = defineProps({
 
 const styles = {
     primary:
-        'bg-brand-600 text-ink-inverse shadow-brand hover:bg-brand-700 disabled:hover:bg-brand-600',
+        'bg-brand-600 text-ink-inverse shadow-brand hover:brightness-90 disabled:hover:brightness-100',
     secondary:
         'border border-line-strong bg-surface text-ink hover:bg-surface-sunken',
     danger: 'bg-danger-500 text-ink-inverse hover:brightness-95',

@@ -206,7 +206,7 @@ async function submit() {
                         <img :src="url" alt="" class="aspect-square w-full object-cover" />
                         <button
                             type="button"
-                            class="absolute top-1 right-1 grid size-6 place-items-center rounded-full bg-ink/70 text-ink-inverse hover:bg-ink"
+                            class="absolute top-1 right-1 grid size-6 place-items-center rounded-full bg-scrim/70 text-ink-inverse hover:bg-scrim"
                             :aria-label="`Remove photo ${index + 1}`"
                             @click="removePhoto(index)"
                         >

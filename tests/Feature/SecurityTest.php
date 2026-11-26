@@ -105,6 +105,7 @@ class SecurityTest extends TestCase
             'api/v1/logout',
             'api/v1/logout-all',
             'dashboard/refresh',    // only clears a cache, and is throttled
+            'appearance',           // a person's own light or dark screen, and is throttled
             '/',                    // a GET-only redirect to the dashboard
         ];
 

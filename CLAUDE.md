@@ -260,6 +260,15 @@ The client's scope (`SCOPE.md`) is being built on top of that, by phase:
     `migrate`, `permissions:sync`, `config:cache` (two new settings and a
     reworded permission), `route:cache` where routes are cached (or
     `/pending-payments` is a 404), and the new `public/build`.
+35.1 **Done.** A light or a dark screen (CR-3, the client's request of 26
+    November 2026) — Light, Dark or Same as my device, chosen by each person
+    from the switch in the top bar (where the search box was) and kept on their account; Settings →
+    Theme Settings → Default appearance for anyone who has not chosen; paper
+    and the sign-in pages always light. Built on the user's GO! on all four
+    recommendations. 1,316 PHP tests and 235 front-end tests pass; the
+    migration is applied locally. No new permission, so a deploy runs
+    `migrate`, `config:cache` (a new setting) and needs the new
+    `public/build`.
 36. Next: stages 4 and 6 unless the user reorders them; the pending purchase
     quantities on the Stock screen (stage 5's last box) is a small
     follow-up. Each waits on GO!.
@@ -1139,6 +1148,45 @@ Decisions already taken for the phases ahead, so they are not reopened:
   carrying a file is posted with `_method: 'put'`, because PHP does not read
   an upload on a PUT; `useFormModal` switches only when a file is really
   there, so the other four master dialogs are untouched.
+- **Each person picks a light or a dark screen** (phase 35.1, CR-3, built on
+  GO! with these defaults). `users.appearance` — `light`, `dark` or `system`
+  (`App\Enums\Appearance`); **null means "the default"**, Settings → Theme
+  Settings → `theme.appearance` (Light), so nothing changed for anybody until
+  they chose. Set only by `PUT /appearance` (`AppearanceController`, the
+  switch in the top bar, `AppearanceSwitch.vue` — it replaced the search box,
+  which searched nothing (26 November 2026, on the user's GO!); icon above
+  the word, icons only on a phone; not in the menu under the name — and its
+  `compact` icons in the till's navy header, which has no such menu): **no
+  permission** — it changes only the asker's own look, so it is on
+  `SecurityTest`'s exceptions list beside `logout`, throttled; never in
+  `$fillable`, so the Users form cannot touch it; `appearance` is audit
+  **noise** (`AuditService::NOISE`), no row per switch. The save reloads only
+  `auth` and `appearance` and the screen changes before the server answers.
+  **How it works**: `ThemeStyles::htmlAttributes($user)` writes
+  `data-appearance` and, unless it is *system*, `data-theme` onto `<html>`; a
+  head script resolves *system* from `prefers-color-scheme` before the first
+  paint; **sign-in and sign-out are Inertia visits that never reload
+  `<html>`**, so `lib/appearance.js` `syncAppearance()` runs after every
+  visit from the shared `appearance` prop (null for a guest, which takes
+  both attributes away). **The dark screen is the tokens again**: one
+  `:root[data-theme="dark"]` block in `app.css`, **inside `@media screen`**
+  so **paper always prints light**; `-50`–`-400` become dark tints, `-700`
+  and up light text, `-600` stays behind white text, **`ink-inverse` stays
+  white** (it means text on a coloured button). The brand shades are built
+  from `--brand-base` (written by `ThemeStyles` beside the ramp) with
+  relative colours, a `color-mix` fallback first: a near-black brand such as
+  the client's `#090321` is lifted to a visible navy. **Backdrops are
+  `bg-scrim`, never `bg-ink`** (ink turns light); a button darkens on hover
+  with `brightness-90`, never `bg-*-700` (a light text shade when dark);
+  white text on colour is `text-ink-inverse`, never `text-white`. A logo
+  drawn for white paper carries `data-logo-chip` and sits on a white chip
+  when dark; the footer's DeltaTech logo is navy on light, white on dark.
+  Charts: `ChartPanel` passes options through `darkChart()` (`lib/charts.js`)
+  and is keyed on the screen. SweetAlert2's box, text and inputs are
+  overridden in the same block. **The sign-in pages, the navy guest pages and
+  the slips keep their fixed identity** and never turn dark.
+  `tests/js/appearance.test.js` fails on any colour that cannot turn dark
+  outside those files.
 - **The developer's credit line is one component** (23 November 2026, on
   the user's GO!). *Designed, Built and Shipped by [logo] DeltaTech* is
   `Components/DeveloperCredit.vue`: the logo always left of the name, only

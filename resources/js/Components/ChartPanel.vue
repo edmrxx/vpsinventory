@@ -1,7 +1,8 @@
 <script setup>
-import { onMounted, shallowRef } from 'vue'
+import { computed, onMounted, shallowRef } from 'vue'
 import Skeleton from './Skeleton.vue'
-import { chartTheme, useApexCharts } from '../lib/charts'
+import { chartTheme, darkChart, useApexCharts } from '../lib/charts'
+import { isDark } from '../lib/appearance'
 
 /**
  * A chart in a card, with ApexCharts loaded only when it is needed.
@@ -9,7 +10,7 @@ import { chartTheme, useApexCharts } from '../lib/charts'
  * A skeleton stands in twice: while the figures are on their way from the
  * server, and while the chart library itself downloads.
  */
-defineProps({
+const props = defineProps({
     heading: { type: String, required: true },
     subheading: { type: String, default: '' },
     /** The merged ApexCharts options, or null while the data is loading. */
@@ -23,6 +24,13 @@ const ApexChart = shallowRef(null)
 onMounted(async () => {
     ApexChart.value = await useApexCharts()
 })
+
+/*
+ * Redrawn for the dark screen while it is dark. The chart is keyed on the
+ * screen too, so a switch draws it afresh rather than leaving light labels
+ * that ApexCharts did not think to update.
+ */
+const drawn = computed(() => (isDark.value ? darkChart(props.options) : props.options))
 
 defineExpose({ chartTheme })
 </script>
@@ -43,7 +51,8 @@ defineExpose({ chartTheme })
             <component
                 :is="ApexChart"
                 v-if="ApexChart && options && series"
-                :options="options"
+                :key="isDark ? 'dark' : 'light'"
+                :options="drawn"
                 :series="series"
                 :height="height"
             />

@@ -7,6 +7,7 @@ import DeveloperCredit from '../Components/DeveloperCredit.vue'
 import SlipPrinter from '../Components/SlipPrinter.vue'
 import { useFlash } from '../composables/useFlash'
 import { useSidebar } from '../composables/useSidebar'
+import { isDark } from '../lib/appearance'
 
 const props = defineProps({
     title: { type: String, default: '' },
@@ -59,7 +60,8 @@ const transitionKey = computed(() => page.component)
             >
                 <span>{{ page.props.appName }}</span>
                 <span class="hidden sm:inline" aria-hidden="true">&middot;</span>
-                <DeveloperCredit logo="navy" logo-class="size-4" />
+                <!-- The navy symbol on the light screen, the white one on the dark. -->
+                <DeveloperCredit :logo="isDark ? 'white' : 'navy'" logo-class="size-4" />
             </footer>
         </div>
     </div>

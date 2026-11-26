@@ -1,8 +1,9 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
-import { Bell, ChevronDown, CircleCheck, LogOut, Menu, Search, UserCog } from '@lucide/vue'
+import { Bell, ChevronDown, CircleCheck, LogOut, Menu, UserCog } from '@lucide/vue'
 import { confirmLogout } from '../lib/swal'
+import AppearanceSwitch from './AppearanceSwitch.vue'
 import { usePermissions } from '../composables/usePermissions'
 import { navigation } from '../navigation'
 
@@ -86,24 +87,13 @@ async function logout() {
             {{ title }}
         </h1>
 
-        <!-- Search: visual only in this phase. -->
-        <div class="ml-auto hidden items-center md:flex">
-            <label class="relative">
-                <span class="sr-only">Search</span>
-                <Search
-                    :size="16"
-                    class="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-subtle"
-                />
-                <input
-                    type="search"
-                    placeholder="Search…"
-                    class="h-9 w-56 rounded-field border border-line bg-surface-muted pr-3 pl-9 text-sm text-ink placeholder:text-ink-subtle focus:border-brand-300 focus:bg-surface"
-                />
-            </label>
-        </div>
+        <!-- The light or dark screen (phase 35.1), where the search box was —
+             that box searched nothing (26 November 2026, on the user's GO!).
+             Icons only on a phone. -->
+        <AppearanceSwitch class="ml-auto shrink-0" />
 
         <!-- What waits on this person: the same counts as the sidebar badges. -->
-        <div ref="bellRef" class="relative ml-auto shrink-0 md:ml-0">
+        <div ref="bellRef" class="relative shrink-0">
             <button
                 type="button"
                 class="relative grid size-9 place-items-center rounded-field text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink"
@@ -117,7 +107,7 @@ async function logout() {
                 <Bell :size="18" />
                 <span
                     v-if="waitingTotal > 0"
-                    class="absolute -top-0.5 -right-0.5 min-w-4 rounded-full bg-danger-500 px-1 text-center text-[10px] leading-4 font-bold text-white tabular-nums ring-2 ring-surface"
+                    class="absolute -top-0.5 -right-0.5 min-w-4 rounded-full bg-danger-500 px-1 text-center text-[10px] leading-4 font-bold text-ink-inverse tabular-nums ring-2 ring-surface"
                     data-bell-count
                 >
                     {{ waitingTotal > 99 ? '99+' : waitingTotal }}
@@ -160,7 +150,7 @@ async function logout() {
                                     <span class="block text-sm font-medium text-ink">{{ menuItems[item.key]?.label ?? item.key }}</span>
                                     <span class="block text-xs text-ink-muted">{{ item.count }} {{ item.count === 1 ? item.text[0] : item.text[1] }}</span>
                                 </span>
-                                <span class="shrink-0 rounded-full bg-danger-500 px-1.5 py-0.5 text-2xs leading-none font-bold text-white tabular-nums">
+                                <span class="shrink-0 rounded-full bg-danger-500 px-1.5 py-0.5 text-2xs leading-none font-bold text-ink-inverse tabular-nums">
                                     {{ item.count > 99 ? '99+' : item.count }}
                                 </span>
                             </Link>
@@ -214,6 +204,7 @@ async function logout() {
                             {{ primaryRole ?? 'No role' }}
                         </p>
                     </div>
+
 
                     <button
                         type="button"

@@ -61,7 +61,7 @@ const badge = computed(() => {
 
         <span
             v-if="badge && !iconsOnly"
-            class="ml-auto min-w-5 rounded-full bg-danger-500 px-1.5 py-0.5 text-center text-2xs leading-none font-bold text-white tabular-nums"
+            class="ml-auto min-w-5 rounded-full bg-danger-500 px-1.5 py-0.5 text-center text-2xs leading-none font-bold text-ink-inverse tabular-nums"
             :aria-label="`${badge} waiting`"
             data-nav-badge
         >
@@ -70,7 +70,7 @@ const badge = computed(() => {
         <!-- Folded menu: a red dot with the count on the icon's corner. -->
         <span
             v-if="badge && iconsOnly"
-            class="absolute top-1 right-1 min-w-4 rounded-full bg-danger-500 px-1 text-center text-[10px] leading-4 font-bold text-white tabular-nums"
+            class="absolute top-1 right-1 min-w-4 rounded-full bg-danger-500 px-1 text-center text-[10px] leading-4 font-bold text-ink-inverse tabular-nums"
             :aria-label="`${badge} waiting`"
             data-nav-badge
         >

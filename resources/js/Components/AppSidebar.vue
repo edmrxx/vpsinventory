@@ -42,7 +42,7 @@ async function logout() {
     >
         <div
             v-if="mobileOpen && !isDesktop"
-            class="fixed inset-0 z-30 bg-ink/40 backdrop-blur-sm lg:hidden"
+            class="fixed inset-0 z-30 bg-scrim/40 backdrop-blur-sm lg:hidden"
             @click="emit('close')"
         />
     </Transition>

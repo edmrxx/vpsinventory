@@ -198,7 +198,7 @@ onBeforeUnmount(() => {
             leave-to-class="opacity-0"
         >
             <div v-if="open" class="fixed inset-0 z-1000" role="presentation">
-                <div class="absolute inset-0 bg-ink/40 backdrop-blur-[2px]" />
+                <div class="absolute inset-0 bg-scrim/40 backdrop-blur-[2px]" />
 
                 <div
                     class="absolute inset-0 overflow-y-auto p-0 sm:p-6"
