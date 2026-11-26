@@ -34,7 +34,7 @@ describe('the credit line', () => {
         expect(logo.closest('span')).toBe(name.closest('span'))
     })
 
-    it.each(['gradient', 'navy', 'white'])('draws the %s logo, and the file is there', (logo) => {
+    it.each(['navy', 'white'])('draws the %s logo, and the file is there', (logo) => {
         const credit = mount(DeveloperCredit, { props: { logo } })
 
         expect(credit.get('img').attributes('src')).toBe(`/images/deltatech/deltatech-${logo}.png`)
@@ -46,7 +46,7 @@ describe('the credit line', () => {
 
 describe('where the credit line is shown', () => {
     it('sits on the sign-in pages, the app footer and the signed-out error page, each with the logo for its background', () => {
-        expect(source('resources/js/Layouts/SignInLayout.vue')).toMatch(/<DeveloperCredit logo="gradient"/)
+        expect(source('resources/js/Layouts/SignInLayout.vue')).toMatch(/<DeveloperCredit logo="navy"/)
         expect(source('resources/js/Layouts/AppLayout.vue')).toMatch(/<DeveloperCredit logo="navy"/)
         expect(source('resources/js/Layouts/GuestLayout.vue')).toMatch(/<DeveloperCredit logo="white"/)
     })

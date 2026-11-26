@@ -146,7 +146,7 @@ const markets = ['Residential', 'Commercial', 'Industrial']
                      on 24 November 2026). It takes no more height than the caption
                      did, so the page keeps the mockup's height and never scrolls. -->
                 <p class="m-0 mt-[calc(24*var(--u))] text-center text-[length:calc(14*var(--u))] leading-none text-goe-muted lg:mt-[calc(28*var(--u))] lg:text-[length:calc(16*var(--u))]">
-                    <DeveloperCredit logo="gradient" logo-class="size-[calc(20*var(--u))]" />
+                    <DeveloperCredit logo="navy" logo-class="size-[calc(20*var(--u))]" />
                 </p>
             </main>
 

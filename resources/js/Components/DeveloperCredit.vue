@@ -8,9 +8,8 @@
  * system by accident.
  *
  * `logo` is chosen by the page for its background:
- *   - gradient: a light background, drawn at 20 px or larger (smaller, its
- *     pale tip fades into the page);
- *   - navy: a light background, at small sizes;
+ *   - navy: any light background, at every size — the solid blue symbol,
+ *     asked for wherever the page is white (26 November 2026);
  *   - white: a dark background.
  * A black logo exists for paper, but nothing printed carries this line.
  *
@@ -24,7 +23,7 @@ const props = defineProps({
     logo: {
         type: String,
         default: 'navy',
-        validator: (value) => ['gradient', 'navy', 'white'].includes(value),
+        validator: (value) => ['navy', 'white'].includes(value),
     },
     // The logo's size, as classes, so the sign-in page can use its own unit.
     logoClass: { type: String, default: 'size-4' },
