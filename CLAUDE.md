@@ -1143,7 +1143,9 @@ Decisions already taken for the phases ahead, so they are not reopened:
   the user's GO!). *Designed, Built and Shipped by [logo] DeltaTech* is
   `Components/DeveloperCredit.vue`: the logo always left of the name, only
   the name linked (`https://deltatechph.com`, new tab), the words written in
-  the component and never a setting. It sits on the sign-in pages (gradient
+  the component and never a setting. **On a light background the logo is
+  always the solid navy symbol** (26 November 2026, at the user's request;
+  the gradient one was removed). It sits on the sign-in pages (navy
   logo, where the caption *GO Enterprises • Inventory Management System* was
   — taken off on 24 November 2026 — no taller than it, so the page never
   scrolls; the card's *Need access? Contact your administrator.* and its

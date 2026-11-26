@@ -2128,7 +2128,7 @@ clear them from Settings. Each place picks the logo for its background:
 
 | Place | Background | Logo |
 |---|---|---|
-| Sign-in and kiosk sign-in (`SignInLayout`), under the card | light cream | gradient, 20 `--u` |
+| Sign-in and kiosk sign-in (`SignInLayout`), under the card | light cream | navy, 20 `--u` |
 | Every app page's footer (`AppLayout`) | light grey | navy, 16 px |
 | The error page for a signed-out visitor (`GuestLayout`) | dark navy | white, 16 px |
 
@@ -2139,7 +2139,10 @@ the caption did, so the page keeps the mockup's height and never scrolls.
 The same day the card's last line, *Need access? Contact your administrator.*,
 and the divider above it were taken off too; the card now ends with *Kiosk
 sign in*.
-The logos are `public/images/deltatech/deltatech-{gradient,navy,white}`, 64 px
+**On a light background the logo is always the solid navy symbol** (26
+November 2026, at the user's request); the blue gradient one that the sign-in
+pages carried before was removed. The logos are
+`public/images/deltatech/deltatech-{navy,white}`, 64 px
 tall, PNG and WebP — the 991 px originals would have cost every page about a
 megabyte. A black logo was supplied for paper and is not used. **The line
 never goes on a printed document** (quotation, order, request, RFQ,
