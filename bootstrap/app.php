@@ -19,13 +19,16 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Every reply, web and API alike, carries the safety headers.
-        $middleware->append(SecurityHeaders::class);
+    // Coolify's proxy handles HTTPS, so trust its forwarded headers.
+    $middleware->trustProxies(at: '*');
 
-        $middleware->web(append: [
-            HandleInertiaRequests::class,
-            AddLinkHeadersForPreloadedAssets::class,
-        ]);
+    // Every reply, web and API alike, carries the safety headers.
+    $middleware->append(SecurityHeaders::class);
+
+    $middleware->web(append: [
+        HandleInertiaRequests::class,
+        AddLinkHeadersForPreloadedAssets::class,
+    ]);
 
         $middleware->redirectGuestsTo(fn () => route('login'));
 
