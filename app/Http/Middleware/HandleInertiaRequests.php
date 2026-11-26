@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Support\Settings;
 use App\Support\SidebarBadges;
+use App\Support\ThemeStyles;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -38,6 +39,11 @@ class HandleInertiaRequests extends Middleware
             'appName' => $settings->get('company.name'),
             'company' => $settings->group('company'),
             'theme' => $settings->group('theme'),
+            // What the signed-in person sees — their own choice, else the
+            // default — so the page can put it on <html> after every visit
+            // (sign-in and sign-out are visits, not page loads). Null for a
+            // guest: the sign-in pages are always light.
+            'appearance' => app(ThemeStyles::class)->appearanceFor($user)?->value,
             // The currency reaches every screen that shows an amount, so no
             // page has to carry a hard-coded peso sign.
             'system' => $settings->group('system'),
@@ -66,6 +72,8 @@ class HandleInertiaRequests extends Middleware
                     'name' => $user->name,
                     'username' => $user->username,
                     'initials' => $user->initials(),
+                    // Their own light or dark choice; null follows the default.
+                    'appearance' => $user->appearance,
                     'roles' => $user->getRoleNames()->values()->all(),
                     // The front end uses this list to hide menu items and
                     // buttons. The server still checks every request.

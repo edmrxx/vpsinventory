@@ -47,7 +47,8 @@ describe('the credit line', () => {
 describe('where the credit line is shown', () => {
     it('sits on the sign-in pages, the app footer and the signed-out error page, each with the logo for its background', () => {
         expect(source('resources/js/Layouts/SignInLayout.vue')).toMatch(/<DeveloperCredit logo="navy"/)
-        expect(source('resources/js/Layouts/AppLayout.vue')).toMatch(/<DeveloperCredit logo="navy"/)
+        // The app footer follows the person's light or dark screen (phase 35.1).
+        expect(source('resources/js/Layouts/AppLayout.vue')).toMatch(/<DeveloperCredit :logo="isDark \? 'white' : 'navy'"/)
         expect(source('resources/js/Layouts/GuestLayout.vue')).toMatch(/<DeveloperCredit logo="white"/)
     })
 

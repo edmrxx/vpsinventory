@@ -237,3 +237,71 @@ export function barChartOptions(data, format, { stacked = false, labelWidth = nu
             : {}),
     }
 }
+
+/*
+ * The dark screen (phase 35.1). The builders above draw for the light one;
+ * `ChartPanel` passes their options through here while the screen is dark,
+ * so the colours are changed in one place instead of in every builder.
+ * ApexCharts paints straight into SVG attributes, which cannot read a CSS
+ * variable, so the values are written out — the dark `ink-muted`,
+ * `ink-subtle` and `line` tokens of resources/css/app.css.
+ */
+export const darkChartColours = {
+    text: 'oklch(0.77 0.012 286)',
+    axis: 'oklch(0.64 0.012 286)',
+    grid: 'oklch(0.29 0.012 286)',
+}
+
+/** An axis with its labels recoloured, or as it was when it has none. */
+function darkAxis(axis) {
+    if (!axis) return axis
+    if (Array.isArray(axis)) return axis.map(darkAxis)
+    if (!axis.labels) return axis
+
+    return { ...axis, labels: { ...axis.labels, style: { ...axis.labels.style, colors: darkChartColours.axis } } }
+}
+
+/** The parts that carry a colour of their own, for the dark screen. */
+function darkParts(options) {
+    const parts = {}
+
+    if (options.xaxis) parts.xaxis = darkAxis(options.xaxis)
+    if (options.yaxis) parts.yaxis = darkAxis(options.yaxis)
+
+    if (options.dataLabels?.style?.colors) {
+        parts.dataLabels = {
+            ...options.dataLabels,
+            style: { ...options.dataLabels.style, colors: [darkChartColours.text] },
+        }
+    }
+
+    return parts
+}
+
+/**
+ * Chart options redrawn for the dark screen. The slices, bars and lines keep
+ * their colours — they read on both.
+ *
+ * @param {object|null} options  What one of the builders above returned.
+ */
+export function darkChart(options) {
+    if (!options) return options
+
+    return {
+        ...options,
+        ...darkParts(options),
+        theme: { ...options.theme, mode: 'dark' },
+        chart: { ...options.chart, background: 'transparent', foreColor: darkChartColours.text },
+        grid: { ...options.grid, borderColor: darkChartColours.grid },
+        tooltip: { ...options.tooltip, theme: 'dark' },
+        legend: { ...options.legend, labels: { ...options.legend?.labels, colors: darkChartColours.text } },
+        ...(options.responsive
+            ? {
+                  responsive: options.responsive.map((rule) => ({
+                      ...rule,
+                      options: { ...rule.options, ...darkParts(rule.options ?? {}) },
+                  })),
+              }
+            : {}),
+    }
+}

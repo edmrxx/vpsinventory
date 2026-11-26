@@ -28,7 +28,7 @@ const showDetails = computed(() => printing.value.show_company_details !== false
 <template>
     <header class="flex flex-wrap items-start justify-between gap-6 border-b border-line pb-6">
         <div class="flex items-start gap-4">
-            <img v-if="showLogo" :src="company.logo" alt="" class="size-14 rounded-field object-contain" />
+            <img v-if="showLogo" :src="company.logo" alt="" data-logo-chip class="size-14 rounded-field object-contain" />
             <div>
                 <p class="text-base font-bold text-ink">{{ company.name }}</p>
                 <template v-if="showDetails">

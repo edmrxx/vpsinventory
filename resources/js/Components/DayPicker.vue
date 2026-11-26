@@ -183,7 +183,7 @@ function quick(offset) {
                         class="relative grid h-11 place-items-center rounded-field text-sm font-medium transition"
                         :class="[
                             cell.chosen
-                                ? 'bg-brand-600 font-bold text-white'
+                                ? 'bg-brand-600 font-bold text-ink-inverse'
                                 : cell.future
                                   ? 'cursor-not-allowed text-ink-subtle/40'
                                   : 'text-ink hover:bg-surface-sunken',

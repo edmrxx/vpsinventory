@@ -144,7 +144,7 @@ const tillHref = () => `/pos?location=${props.order.location_id}&pending=${props
             <button
                 v-if="can.receive"
                 type="button"
-                class="inline-flex h-9 items-center gap-1.5 rounded-field bg-success-500 px-3 text-sm font-semibold text-white hover:bg-success-700"
+                class="inline-flex h-9 items-center gap-1.5 rounded-field bg-success-500 px-3 text-sm font-semibold text-ink-inverse hover:brightness-90"
                 data-receive
                 @click="$emit('receive', order)"
             >

@@ -161,7 +161,7 @@ function printReport() {
                 />
                 <button
                     type="button"
-                    class="h-9 rounded-field bg-brand-600 px-4 text-sm font-semibold text-ink-inverse shadow-brand transition-colors hover:bg-brand-700"
+                    class="h-9 rounded-field bg-brand-600 px-4 text-sm font-semibold text-ink-inverse shadow-brand transition hover:brightness-90"
                     @click="apply"
                 >
                     Show

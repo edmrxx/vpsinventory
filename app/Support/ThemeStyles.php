@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use App\Enums\Appearance;
+use App\Models\User;
+
 /**
  * Turns the theme settings into CSS variables.
  *
@@ -62,9 +65,15 @@ class ThemeStyles
      * Attributes for the <html> tag, so CSS can react to the theme without
      * waiting for Vue.
      *
+     * `data-appearance` is the signed-in person's choice and `data-theme`
+     * what it comes to: dark or light. "Same as my device" carries no
+     * `data-theme` — only the browser knows the device's setting, and the
+     * script in the page head fills it in before anything is painted. A
+     * guest gets neither: the sign-in pages are always light.
+     *
      * @return array<string, string>
      */
-    public function htmlAttributes(): array
+    public function htmlAttributes(?User $user = null): array
     {
         $attributes = [
             'data-density' => $this->settings->get('theme.density', 'comfortable'),
@@ -74,7 +83,32 @@ class ThemeStyles
             $attributes['data-transitions'] = 'off';
         }
 
+        $appearance = $this->appearanceFor($user);
+
+        if ($appearance !== null) {
+            $attributes['data-appearance'] = $appearance->value;
+
+            if ($appearance !== Appearance::System) {
+                $attributes['data-theme'] = $appearance->value;
+            }
+        }
+
         return $attributes;
+    }
+
+    /**
+     * What one person sees: their own choice, else the default in Theme
+     * Settings. Null for a guest.
+     */
+    public function appearanceFor(?User $user): ?Appearance
+    {
+        if ($user === null) {
+            return null;
+        }
+
+        return Appearance::tryFrom((string) $user->appearance)
+            ?? Appearance::tryFrom((string) $this->settings->get('theme.appearance', 'light'))
+            ?? Appearance::Light;
     }
 
     /**
@@ -102,6 +136,11 @@ class ThemeStyles
                     : "color-mix(in oklab, {$base} {$weight}%, {$mixWith})"
             ).';';
         }
+
+        // The colour itself, apart from the ramp: the dark screen builds its
+        // own shades from it (resources/css/app.css), and cannot read
+        // --color-brand-600 while it is rewriting that same variable.
+        $declarations[] = "--brand-base:{$base};";
 
         // The brand shadow is tinted with the same colour.
         $declarations[] = '--shadow-brand:'

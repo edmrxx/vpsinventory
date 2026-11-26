@@ -46,6 +46,11 @@
     --color-line: oklch(0.92 0.005 286);
     --color-line-strong: oklch(0.86 0.007 286);
 
+    /* The dim layer behind a dialog, the menu on a phone and a photo, and a
+       tooltip's dark box. Its own token, not `ink`, because ink turns light
+       on the dark screen and a backdrop must stay dark on both. */
+    --color-scrim: oklch(0.24 0.02 286);
+
     /* --- Status ---------------------------------------------------------- */
     --color-success-50: oklch(0.96 0.03 162);
     --color-success-500: oklch(0.68 0.14 162);
@@ -174,6 +179,13 @@
         background-color: var(--color-brand-100);
         color: var(--color-brand-900);
     }
+
+    /* The brand colour on its own, for the dark screen to build its shades
+       from. Kept in a layer so the Theme Settings colour, printed in the
+       page head without one, always wins over this default. */
+    :root {
+        --brand-base: oklch(0.55 0.2 286);
+    }
 }
 
 /* ==========================================================================
@@ -275,7 +287,7 @@
         background-image: linear-gradient(
             90deg,
             transparent,
-            oklch(1 0 0 / 0.65),
+            var(--shimmer-glow, oklch(1 0 0 / 0.65)),
             transparent
         );
         animation: shimmer-sweep 1.6s infinite;
@@ -306,6 +318,120 @@
 :root[data-transitions="off"] .page-enter-active,
 :root[data-transitions="off"] .page-leave-active {
     transition: none;
+}
+
+/* ==========================================================================
+   The dark screen (phase 35.1, CR-3)
+   The server puts data-theme="dark" on <html> for a person who chose Dark,
+   and the head script for "Same as my device" when the device is dark. Every
+   colour is a token, so the dark screen is the tokens again with other
+   values: the components do not change.
+
+   Inside `@media screen` on purpose: paper is always white, so a document
+   printed from the dark screen comes out exactly as from the light one.
+
+   The shades run the other way round on a dark surface. `-50` to `-200` are
+   pale fills on the light screen and become dark tints; `-700` and up are
+   text and become light; `-600` stays a solid colour behind white text, and
+   `ink-inverse` stays white for that reason. The brand shades are built from
+   --brand-base, so the colour picked in Theme Settings carries through — a
+   near-black brand is lifted to a navy a button can still be seen in.
+   ========================================================================== */
+@media screen {
+    :root[data-theme="dark"] {
+        color-scheme: dark;
+
+        --color-canvas: oklch(0.165 0.01 286);
+        --color-surface: oklch(0.205 0.012 286);
+        --color-surface-muted: oklch(0.225 0.012 286);
+        --color-surface-sunken: oklch(0.185 0.011 286);
+
+        --color-ink: oklch(0.94 0.005 286);
+        --color-ink-muted: oklch(0.77 0.012 286);
+        --color-ink-subtle: oklch(0.64 0.012 286);
+
+        --color-line: oklch(0.29 0.012 286);
+        --color-line-strong: oklch(0.37 0.014 286);
+
+        --color-success-50: oklch(0.27 0.045 162);
+        --color-success-700: oklch(0.8 0.13 162);
+        --color-warning-50: oklch(0.29 0.05 80);
+        --color-warning-700: oklch(0.85 0.13 85);
+        --color-danger-50: oklch(0.28 0.06 25);
+        --color-danger-700: oklch(0.77 0.14 25);
+        --color-info-50: oklch(0.27 0.045 235);
+        --color-info-700: oklch(0.79 0.11 235);
+
+        /* For a browser without relative colours: mixed, not lifted. */
+        --color-brand-50: color-mix(in oklab, var(--brand-base) 22%, var(--color-surface));
+        --color-brand-100: color-mix(in oklab, var(--brand-base) 30%, var(--color-surface));
+        --color-brand-200: color-mix(in oklab, var(--brand-base) 42%, var(--color-surface));
+        --color-brand-300: color-mix(in oklab, var(--brand-base) 55%, var(--color-surface));
+        --color-brand-400: color-mix(in oklab, var(--brand-base) 70%, var(--color-surface));
+        --color-brand-700: color-mix(in oklab, var(--brand-base) 35%, white);
+        --color-brand-800: color-mix(in oklab, var(--brand-base) 25%, white);
+        --color-brand-900: color-mix(in oklab, var(--brand-base) 15%, white);
+
+        --shadow-xs-soft: 0 1px 2px 0 oklch(0 0 0 / 0.3);
+        --shadow-card: 0 1px 2px 0 oklch(0 0 0 / 0.3), 0 1px 3px 0 oklch(0 0 0 / 0.25);
+        --shadow-raised: 0 2px 4px -1px oklch(0 0 0 / 0.35), 0 8px 16px -4px oklch(0 0 0 / 0.4);
+        --shadow-popover: 0 4px 8px -2px oklch(0 0 0 / 0.4), 0 16px 32px -8px oklch(0 0 0 / 0.55);
+
+        --shimmer-glow: oklch(1 0 0 / 0.06);
+    }
+
+    /* Each shade at a lightness that reads on the dark surface, whatever the
+       brand colour is: the button never darker than 0.42, the text always
+       light. */
+    @supports (color: oklch(from red l c h)) {
+        :root[data-theme="dark"] {
+            --color-brand-50: oklch(from var(--brand-base) 0.27 min(c, 0.07) h);
+            --color-brand-100: oklch(from var(--brand-base) 0.31 min(c, 0.08) h);
+            --color-brand-200: oklch(from var(--brand-base) 0.37 min(c, 0.09) h);
+            --color-brand-300: oklch(from var(--brand-base) 0.46 min(c, 0.11) h);
+            --color-brand-400: oklch(from var(--brand-base) 0.55 min(c, 0.13) h);
+            --color-brand-500: oklch(from var(--brand-base) clamp(0.62, l, 0.72) c h);
+            --color-brand-600: oklch(from var(--brand-base) clamp(0.42, l, 0.58) c h);
+            --color-brand-700: oklch(from var(--brand-base) 0.81 min(c, 0.14) h);
+            --color-brand-800: oklch(from var(--brand-base) 0.87 min(c, 0.1) h);
+            --color-brand-900: oklch(from var(--brand-base) 0.93 min(c, 0.06) h);
+        }
+    }
+
+    /* A logo drawn for white paper (dark lettering, no background of its
+       own) sits on a small white card, or its lettering disappears. */
+    :root[data-theme="dark"] [data-logo-chip] {
+        background-color: #fff;
+        border-radius: var(--radius-field);
+        padding: 0.125rem;
+    }
+
+    /* The chosen button in the top bar's switch: one step lighter than its
+       tray is too quiet on the dark screen, so it takes the strong line. */
+    :root[data-theme="dark"] [data-appearance-switch] [aria-checked="true"] {
+        background-color: var(--color-line-strong);
+    }
+
+    /* SweetAlert2 paints its own white box and grey text. */
+    :root[data-theme="dark"] :is(.maf-swal-popup, .maf-swal-toast) {
+        background: var(--color-surface) !important;
+        color: var(--color-ink) !important;
+    }
+
+    :root[data-theme="dark"] :is(.swal2-input, .swal2-textarea, .swal2-select) {
+        background: var(--color-surface-sunken) !important;
+        border-color: var(--color-line-strong) !important;
+        color: var(--color-ink) !important;
+    }
+
+    :root[data-theme="dark"] .swal2-validation-message {
+        background: var(--color-surface-sunken) !important;
+        color: var(--color-danger-700) !important;
+    }
+
+    :root[data-theme="dark"] .swal2-close {
+        color: var(--color-ink-subtle) !important;
+    }
 }
 
 /* ==========================================================================

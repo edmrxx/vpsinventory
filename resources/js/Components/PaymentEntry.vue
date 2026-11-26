@@ -271,7 +271,7 @@ const box = computed(() => (props.touch ? 'h-12 text-base' : 'h-10 text-sm'))
                 :class="[
                     chip,
                     isPicked(method)
-                        ? 'bg-brand-600 text-white shadow-sm'
+                        ? 'bg-brand-600 text-ink-inverse shadow-sm'
                         : 'bg-surface-sunken text-ink-muted hover:text-ink',
                 ]"
                 :aria-pressed="isPicked(method)"
@@ -288,7 +288,7 @@ const box = computed(() => (props.touch ? 'h-12 text-base' : 'h-10 text-sm'))
                 class="inline-flex items-center gap-1.5 rounded-full font-semibold transition disabled:cursor-not-allowed disabled:opacity-50"
                 :class="[
                     chip,
-                    accountPicked ? 'bg-brand-600 text-white shadow-sm' : 'bg-surface-sunken text-ink-muted hover:text-ink',
+                    accountPicked ? 'bg-brand-600 text-ink-inverse shadow-sm' : 'bg-surface-sunken text-ink-muted hover:text-ink',
                 ]"
                 :aria-pressed="accountPicked"
                 :disabled="disabled"

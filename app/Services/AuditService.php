@@ -37,6 +37,9 @@ class AuditService
     /** Attribute changes that are not worth a row of their own. */
     protected const NOISE = [
         'remember_token',
+        // A person's own light or dark screen (phase 35.1): a preference,
+        // not a change to anybody's records.
+        'appearance',
         'created_at',
         'updated_at',
     ];

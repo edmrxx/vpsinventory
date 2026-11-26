@@ -33,7 +33,7 @@ const large = ref(null)
         <Teleport to="body">
             <div
                 v-if="large"
-                class="fixed inset-0 z-50 grid place-items-center bg-ink/80 p-4"
+                class="fixed inset-0 z-50 grid place-items-center bg-scrim/80 p-4"
                 role="dialog"
                 aria-modal="true"
                 @click.self="large = null"

@@ -46,6 +46,7 @@ const initials = computed(() =>
         v-if="logo"
         :src="logo"
         :alt="company.name"
+        data-logo-chip
         class="shrink-0 object-contain"
         :class="sizeClass"
     />

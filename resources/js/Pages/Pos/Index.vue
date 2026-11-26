@@ -20,6 +20,7 @@ import {
     Trash2,
 } from '@lucide/vue'
 import ActionBadge from '../../Components/ActionBadge.vue'
+import AppearanceSwitch from '../../Components/AppearanceSwitch.vue'
 import ComboBox from '../../Components/ComboBox.vue'
 import DocumentModal from '../../Components/DocumentModal.vue'
 import DayPicker from '../../Components/DayPicker.vue'
@@ -1147,11 +1148,11 @@ function step(days) {
         <!-- Who, where, when -->
         <header class="flex shrink-0 items-center justify-between gap-4 bg-navy-900 px-5 py-3.5">
             <div class="flex min-w-0 items-center gap-3">
-                <span class="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 text-white">
+                <span class="grid size-9 shrink-0 place-items-center rounded-full bg-white/10 text-ink-inverse">
                     <Receipt :size="18" />
                 </span>
                 <div class="min-w-0">
-                    <p class="truncate text-base font-bold text-white">{{ company.name }}</p>
+                    <p class="truncate text-base font-bold text-ink-inverse">{{ company.name }}</p>
                     <p class="truncate text-xs text-white/55">{{ cashier.name }}</p>
                 </div>
             </div>
@@ -1173,9 +1174,11 @@ function step(days) {
                     {{ tillPlace }}
                 </p>
                 <p class="hidden text-sm text-white/70 sm:block">{{ now }}</p>
+                <!-- The light or dark screen: the till has no top bar. -->
+                <AppearanceSwitch compact />
                 <button
                     type="button"
-                    class="inline-flex h-10 items-center gap-2 rounded-field px-3 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+                    class="inline-flex h-10 items-center gap-2 rounded-field px-3 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-ink-inverse"
                     @click="signOut"
                 >
                     <LogOut :size="16" />
@@ -1205,7 +1208,7 @@ function step(days) {
                             class="h-11 shrink-0 whitespace-nowrap rounded-field px-4 text-sm font-semibold transition"
                             :class="
                                 category === null
-                                    ? 'bg-brand-600 text-white'
+                                    ? 'bg-brand-600 text-ink-inverse'
                                     : 'bg-surface text-ink-muted hover:text-ink'
                             "
                             @click="pickCategory(null, $event)"
@@ -1221,7 +1224,7 @@ function step(days) {
                             class="h-11 shrink-0 whitespace-nowrap rounded-field px-4 text-sm font-semibold transition"
                             :class="
                                 category === option.value
-                                    ? 'bg-brand-600 text-white'
+                                    ? 'bg-brand-600 text-ink-inverse'
                                     : 'bg-surface text-ink-muted hover:text-ink'
                             "
                             @click="pickCategory(option.value, $event)"
@@ -1319,7 +1322,7 @@ function step(days) {
                         Current sale
                         <span
                             v-if="basket.length"
-                            class="rounded-full bg-brand-600 px-1.5 text-2xs font-bold text-white"
+                            class="rounded-full bg-brand-600 px-1.5 text-2xs font-bold text-ink-inverse"
                         >
                             {{ basket.length }}
                         </span>
@@ -1336,7 +1339,7 @@ function step(days) {
                         Held
                         <span
                             v-if="holds.length"
-                            class="rounded-full bg-warning-500 px-1.5 text-2xs font-bold text-white"
+                            class="rounded-full bg-warning-500 px-1.5 text-2xs font-bold text-ink-inverse"
                         >
                             {{ holds.length }}
                         </span>
@@ -1355,7 +1358,7 @@ function step(days) {
                         Pending
                         <span
                             v-if="pending.length"
-                            class="rounded-full bg-brand-600 px-1.5 text-2xs font-bold text-white"
+                            class="rounded-full bg-brand-600 px-1.5 text-2xs font-bold text-ink-inverse"
                         >
                             {{ pending.length }}
                         </span>
@@ -1443,7 +1446,7 @@ function step(days) {
                                         type="button"
                                         class="h-7 rounded-full px-2.5 text-2xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-35"
                                         :class="String(unit.value) === String(line.unit_id)
-                                            ? 'bg-brand-600 text-white'
+                                            ? 'bg-brand-600 text-ink-inverse'
                                             : 'bg-surface-sunken text-ink-muted hover:text-ink'"
                                         :disabled="unitTaken(line, unit)"
                                         :aria-pressed="String(unit.value) === String(line.unit_id)"
@@ -1525,7 +1528,7 @@ function step(days) {
 
                             <button
                                 type="button"
-                                class="inline-flex h-10 shrink-0 items-center rounded-field bg-brand-600 px-3 text-sm font-semibold text-white transition hover:bg-brand-700 disabled:opacity-50"
+                                class="inline-flex h-10 shrink-0 items-center rounded-field bg-brand-600 px-3 text-sm font-semibold text-ink-inverse transition hover:brightness-90 disabled:opacity-50"
                                 :disabled="holdBusy || posting"
                                 @click="recall(hold)"
                             >
@@ -1597,7 +1600,7 @@ function step(days) {
                                 <button
                                     v-if="order.can.pay"
                                     type="button"
-                                    class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-field bg-success-500 px-3 text-sm font-semibold text-white transition hover:bg-success-700 disabled:opacity-50"
+                                    class="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-field bg-success-500 px-3 text-sm font-semibold text-ink-inverse transition hover:brightness-90 disabled:opacity-50"
                                     :disabled="posting"
                                     @click="payPending(order)"
                                 >
@@ -1820,7 +1823,7 @@ function step(days) {
                         <button
                             v-if="can.takePayment"
                             type="button"
-                            class="flex h-14 w-full items-center justify-center gap-2.5 rounded-field bg-success-500 text-lg font-bold whitespace-nowrap text-white transition hover:bg-success-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+                            class="flex h-14 w-full items-center justify-center gap-2.5 rounded-field bg-success-500 text-lg font-bold whitespace-nowrap text-ink-inverse transition hover:brightness-90 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
                             :disabled="basket.length === 0 || posting || sending"
                             @click="complete"
                         >

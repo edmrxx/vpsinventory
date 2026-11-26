@@ -196,7 +196,7 @@ function startReceive(payload) {
                     <button
                         v-if="row.can?.receive"
                         type="button"
-                        class="grid size-9 place-items-center rounded-field bg-success-50 text-success-700 transition hover:bg-success-500 hover:text-white"
+                        class="grid size-9 place-items-center rounded-field bg-success-50 text-success-700 transition hover:bg-success-500 hover:text-ink-inverse"
                         :title="`Receive payment for ${row.reference}`"
                         :aria-label="`Receive payment for ${row.reference}`"
                         @click="viewing = row.id"

@@ -143,7 +143,7 @@ const sparkColour = computed(
                     </button>
 
                     <span
-                        class="pointer-events-none absolute top-6 left-1/2 z-50 w-60 -translate-x-1/2 rounded-field bg-ink px-3 py-2 text-2xs leading-relaxed font-normal tracking-normal text-surface opacity-0 shadow-raised transition-opacity duration-150 group-hover/info:opacity-100 group-focus-within/info:opacity-100"
+                        class="pointer-events-none absolute top-6 left-1/2 z-50 w-60 -translate-x-1/2 rounded-field bg-scrim px-3 py-2 text-2xs leading-relaxed font-normal tracking-normal text-ink-inverse opacity-0 shadow-raised transition-opacity duration-150 group-hover/info:opacity-100 group-focus-within/info:opacity-100"
                         role="tooltip"
                     >
                         {{ stat.formula }}

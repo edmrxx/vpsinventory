@@ -3,6 +3,7 @@ import '../css/app.css'
 import { createApp, h } from 'vue'
 import { createInertiaApp, router } from '@inertiajs/vue3'
 import swal, { sessionExpired, toastError } from './lib/swal'
+import { syncAppearance, watchDevice } from './lib/appearance'
 
 const appName = import.meta.env.VITE_APP_NAME || 'MAF Inventory'
 
@@ -28,6 +29,10 @@ createInertiaApp({
         // pages that use it (see resources/js/lib/charts.js).
         app.config.globalProperties.$swal = swal
 
+        // The light or dark screen, from the first page's props.
+        syncAppearance(props.initialPage.props)
+        watchDevice()
+
         app.mount(el)
     },
 
@@ -36,6 +41,12 @@ createInertiaApp({
         delay: 120,
         showSpinner: false,
     },
+})
+
+// Signing in and out are visits, not page loads, so <html> is brought into
+// line with whoever is signed in after each one (lib/appearance.js).
+router.on('navigate', (event) => {
+    syncAppearance(event.detail.page.props)
 })
 
 /* -------------------------------------------------------------------------- */

@@ -7,8 +7,8 @@ system as it really runs.
 Type **`UPDATE CHECKLIST!`** to have it checked against the code again and
 reported. The rule for doing that is in `CLAUDE.md`, under "Scope checklist".
 
-- **Last checked:** 2026-11-23
-- **Test suite on that day:** 1,251 PHP tests and 173 front-end tests pass
+- **Last checked:** 2026-11-26
+- **Test suite on that day:** 1,316 PHP tests and 235 front-end tests pass
 - **Client copy:** a PDF was made on 2026-11-08 at
   `~/Desktop/go enterprise scope.pdf`; it is no longer there, and it is not
   rebuilt automatically
@@ -19,8 +19,8 @@ reported. The rule for doing that is in `CLAUDE.md`, under "Scope checklist".
 
 | | |
 |---|---|
-| **Current stage** | Stage 8 — locations, counts, losses: ✅ **done** (all 8 phases: 30, 31.1 to 31.5, 32 and 33), taken ahead of stages 4 and 6 on 20 November 2026. Stages 1, 2, 3, 5, 7, 8 and 9 and CR-1 ✅ done; stage 5 still has one box open — pending purchase quantities on the Stock screen (#12). Stages 4 and 6 are left |
-| **Current phase** | Phase 33 ✅ done (**loss reports**: damaged, expired, rusted, stolen or missing goods reported with photos, held aside at their location, written off only when an approver approves — or rejected, freeing the goods) |
+| **Current stage** | Stage 8 — locations, counts, losses: ✅ **done** (all 8 phases: 30, 31.1 to 31.5, 32 and 33), taken ahead of stages 4 and 6 on 20 November 2026. Stages 1, 2, 3, 5, 7, 8 and 9 and CR-1, CR-2 and CR-3 ✅ done; stage 5 still has one box open — pending purchase quantities on the Stock screen (#12). Stages 4 and 6 are left |
+| **Current phase** | Phase 35.1 ✅ done (**a light or a dark screen**, CR-3, each person's own choice). Before it, phase 33 ✅ done (**loss reports**: damaged, expired, rusted, stolen or missing goods reported with photos, held aside at their location, written off only when an approver approves — or rejected, freeing the goods) |
 | **Waiting on** | **GO!** for the next stage — stage 4 (cashier shifts) or stage 6 (pricing rules and approvals). Decision 4 still has two questions open, each answered for now by a default: whether the till may ever sell from a warehouse (*a store only*, 31.4), and who may transfer and whether a transfer needs approval (*Staff may, no approval*, 31.5). Decision 2 still waits for stage 6 |
 | **Next stage** | Stage 4 (phase 20) or stage 6 (phases 25 to 27), in the order the user picks; stage 6 waits on decisions 2, 3 and 5 |
 
@@ -267,6 +267,16 @@ user's GO! on all five recommendations (Q1–Q5) as phase 17.1.
 - [x] Cancelled with a reason, which frees the goods; the sender cancels their own, whoever takes payment cancels any (`PendingPaymentPolicy`)
 - [x] A slip for the customer marked *NOT PAID — pay at the cashier* and *not an official receipt*; **everybody at the kiosk has *Pending payment*, with nothing ticked**, and a kiosk role without *Record a sale* sends without being able to take money (Q4, Q5) (`resources/js/Components/OrderSlip.vue`, `tests/js/OrderSlip.test.js`)
 
+#### CR-3. A light or a dark screen (26 November 2026) — ✅ Done (4 of 4)
+The client's request: *"Provide UI customization options where the user can
+change the background (options: white and dark)."* Read as a whole dark
+theme, not only a background colour — dark grey behind dark text would be
+unreadable. Built on the user's GO! on all four recommendations as phase 35.1.
+- [x] Each person chooses for themselves — **Light, Dark or Same as my device** — from the switch in the top bar, where the search box that searched nothing used to be (moved there from the menu under their name the same day, at the user's request), or from three icons in the till's header (the till has no such menu); the choice is kept on their account, so it follows them to any computer, and the screen changes at once without reloading the page's figures (`resources/js/Components/AppearanceSwitch.vue`, `app/Http/Controllers/Account/AppearanceController.php`, `tests/Feature/Settings/AppearanceTest.php`)
+- [x] Settings → Theme Settings → **Default appearance** for anyone who has not chosen (Light to start, so nothing changed for anybody until they pick) (`config/settings.php`, `App\Support\ThemeStyles::appearanceFor()`)
+- [x] Every screen inside the app turns dark — lists, dialogs, forms, the till, the charts, the alerts — and the brand colour carries through, lifted so a near-black brand stays visible; a test fails if a screen uses a colour that cannot turn dark (`resources/css/app.css`, `resources/js/lib/charts.js`, `tests/js/appearance.test.js`)
+- [x] **Paper and the sign-in pages stay light**: a document printed from the dark screen prints white, and signing out returns to the light sign-in page at once (`resources/js/lib/appearance.js`)
+
 ---
 
 ## 2. Acceptance checks (proposal section 10)
@@ -347,6 +357,7 @@ warehouse), so phase 31 grew into 31.1 to 31.5.
 | | 33 | Losses — photo, approval, holding place, more reasons | #14 | ✅ Done |
 | **9** Reports and settings | 34 | Report filters, export to PDF and spreadsheet | #16, #24 | ✅ Done |
 | | 35 | Print layouts, backup and export settings | | ✅ Done |
+| | 35.1 | A light or a dark screen, chosen by each person (client's request, 26 November) | CR-3 | ✅ Done |
 
 Phase 30 depends on nothing else and could be built alongside stage 2, so
 the till can scan barcodes sooner.
@@ -357,6 +368,15 @@ the till can scan barcodes sooner.
 
 Newest first. One line for each update.
 
+- **2026-11-26** — **Phase 35.1 built: a light or a dark screen** (CR-3, the
+  client's request of 26 November), on the user's GO! on all four
+  recommendations: each person picks Light, Dark or Same as my device from
+  the top bar (where the empty search box was), kept on their account; Theme Settings holds the
+  default for anyone who has not chosen (Light); paper and the sign-in pages
+  stay light. A new column, `users.appearance`, and a new setting, so a
+  deploy runs `migrate` and `config:cache` and needs the new `public/build`;
+  no new permission. CR-3: 4 of 4 boxes; proposal totals unchanged.
+  1,316 PHP and 235 front-end tests pass.
 - **2026-11-24** — **Phase 17.1 built: Pending payment** (CR-2, the client's
   meeting of 24 November), on the user's GO! on all five recommendations. At
   the kiosk, *Pending payment* beside *Take payment* sends the order to the

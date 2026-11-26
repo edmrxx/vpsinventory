@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Account\AppearanceController;
 use App\Http\Controllers\AdjustmentController;
 use App\Http\Controllers\LossReportController;
 use App\Http\Controllers\StockCountController;
@@ -78,6 +79,12 @@ Route::middleware('auth')->group(function () {
     Route::post('dashboard/refresh', [DashboardController::class, 'refresh'])->name('dashboard.refresh');
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
+
+    // A person's own light or dark screen (phase 35.1). No permission: it
+    // changes only how the app looks to the one asking.
+    Route::put('appearance', [AppearanceController::class, 'update'])
+        ->middleware('throttle:30,1')
+        ->name('appearance.update');
 
     /*
     | User management. The middleware is the first gate; the policies check
