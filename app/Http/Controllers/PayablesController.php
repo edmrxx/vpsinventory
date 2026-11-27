@@ -78,4 +78,49 @@ class PayablesController extends Controller
             ],
         ]);
     }
+
+    /**
+     * The Paid side (phase 24.5, CR-5): what the shop paid each supplier in a
+     * period — on delivery and later — beside what it still owes, and how it
+     * paid. The client's request after the canvass meeting: "which suppliers
+     * were paid in cash, and which are payables". Every figure links to the
+     * list behind it. This month by default.
+     */
+    public function paid(Request $request): Response
+    {
+        $this->authorize('viewAny', SupplierPayment::class);
+
+        $validated = $request->validate([
+            'supplier_id' => ['nullable', 'integer', 'exists:suppliers,id'],
+            'from' => ['nullable', 'date_format:Y-m-d'],
+            'to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'],
+        ]);
+
+        $today = Carbon::today();
+        $from = isset($validated['from']) ? Carbon::parse($validated['from']) : $today->copy()->startOfMonth();
+        $to = isset($validated['to']) ? Carbon::parse($validated['to']) : $today->copy();
+        $supplierId = isset($validated['supplier_id']) ? (int) $validated['supplier_id'] : null;
+
+        $user = $request->user();
+
+        return Inertia::render('Payables/Paid', [
+            'title' => 'Payables · Paid',
+            'today' => $today->format('d M Y'),
+            'filters' => [
+                'supplier_id' => $supplierId,
+                'from' => $from->toDateString(),
+                'to' => $to->toDateString(),
+            ],
+            'period' => $from->format('d M Y').' to '.$to->format('d M Y'),
+            'summary' => SupplierAccount::paidSummary($from, $to, $today, ['supplier_id' => $supplierId]),
+            'options' => [
+                'suppliers' => Supplier::query()->orderBy('name')->get(['id', 'name'])
+                    ->map(fn (Supplier $s) => ['value' => $s->id, 'label' => $s->name])->all(),
+            ],
+            'can' => [
+                'pay' => $user->can('create', SupplierPayment::class),
+                'viewPurchases' => $user->can('viewAny', Purchase::class),
+            ],
+        ]);
+    }
 }

@@ -6,6 +6,7 @@ import AppLayout from '../../Layouts/AppLayout.vue'
 import DataTable from '../../Components/DataTable.vue'
 import FilterSelect from '../../Components/FilterSelect.vue'
 import PageHeader from '../../Components/PageHeader.vue'
+import PayablesTabs from '../../Components/PayablesTabs.vue'
 import DocumentModal from '../../Components/DocumentModal.vue'
 import TableAction from '../../Components/TableAction.vue'
 import { useMoney } from '../../lib/money'
@@ -71,6 +72,7 @@ const viewing = ref(null)
 <template>
     <div>
         <PageHeader heading="Payables" :subheading="`Every bill the shop still owes a supplier, as of ${today}.`" />
+        <PayablesTabs current="owed" />
 
         <!-- What the filtered list adds up to -->
         <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">

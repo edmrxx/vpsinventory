@@ -151,6 +151,11 @@ function printOrder() {
 
             <div class="border-t border-line px-5 py-3 sm:px-6">
                 <p class="text-2xs font-semibold tracking-wider text-ink-muted uppercase">Deliveries</p>
+                <!-- What its deliveries were paid and still owe (phase 24.5). -->
+                <p v-if="order.payment" class="mt-1 text-xs text-ink-muted" data-order-payment>
+                    Paid <strong class="tabular-nums text-success-700">{{ money(order.payment.paid) }}</strong>
+                    · Owed <strong class="tabular-nums" :class="Number(order.payment.owed) > 0 ? 'text-warning-700' : 'text-ink'">{{ money(order.payment.owed) }}</strong>
+                </p>
                 <p v-if="!order.deliveries.length" class="mt-1 text-xs text-ink-subtle">Nothing has been received against this order yet.</p>
                 <ul v-else class="mt-1 space-y-1">
                     <li v-for="delivery in order.deliveries" :key="delivery.id" class="flex flex-wrap items-center gap-2 text-xs">

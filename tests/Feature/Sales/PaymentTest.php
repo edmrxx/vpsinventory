@@ -94,8 +94,9 @@ class PaymentTest extends TestCase
 
     public function test_the_four_methods_arrive_with_the_migration(): void
     {
+        // And Cheque, put in by phase 24.5 for paying suppliers.
         $this->assertSame(
-            ['Bank transfer', 'Cash', 'GCash', 'Maya'],
+            ['Bank transfer', 'Cash', 'Cheque', 'GCash', 'Maya'],
             PaymentMethod::orderBy('name')->pluck('name')->all()
         );
 
@@ -110,7 +111,7 @@ class PaymentTest extends TestCase
 
         $this->assertSame('Cash', $options[0]['label']);
         $this->assertTrue($options[0]['cash']);
-        $this->assertSame(['Cash', 'Bank transfer', 'GCash', 'Maya'], array_column($options, 'label'));
+        $this->assertSame(['Cash', 'Bank transfer', 'Cheque', 'GCash', 'Maya'], array_column($options, 'label'));
     }
 
     /* ------------------------------------------------------------ Cash */
@@ -373,7 +374,7 @@ class PaymentTest extends TestCase
         $admin = $this->admin();
 
         $this->actingAs($admin)->get('/sales/create')
-            ->assertInertia(fn ($page) => $page->where('paymentMethods.0.label', 'Cash')->has('paymentMethods', 4));
+            ->assertInertia(fn ($page) => $page->where('paymentMethods.0.label', 'Cash')->has('paymentMethods', 5));
     }
 
     /* ----------------------------------------------------- Collections */

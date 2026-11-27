@@ -25,6 +25,8 @@ const props = defineProps({
     sales: { type: Object, default: null },
     purchases: { type: Object, default: null },
     collections: { type: Object, default: null },
+    /** Money paid to suppliers (phase 24.5), for who may read supplier payments. */
+    payouts: { type: Object, default: null },
     inventory: { type: Object, default: null },
     can: { type: Object, default: () => ({}) },
 })
@@ -254,6 +256,42 @@ function printReport() {
                     <div v-if="Number(collections.account) > 0" class="flex items-center justify-between px-5 py-2.5">
                         <dt class="text-xs text-ink-muted">of which paid against invoices</dt>
                         <dd class="tabular-nums text-sm text-ink">{{ money(collections.account) }}</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <!-- Money paid to suppliers, by method: on delivery and later
+                 (phase 24.5) — the other side of Money received -->
+            <section v-if="payouts" class="card overflow-hidden print:break-inside-avoid" data-block="payouts">
+                <div class="border-b border-line px-5 py-3.5">
+                    <h3 class="text-sm font-semibold text-ink">Money paid to suppliers</h3>
+                </div>
+
+                <dl class="divide-y divide-line">
+                    <p v-if="!payouts.methods.length" class="px-5 py-6 text-center text-xs text-ink-subtle">
+                        Nothing was paid to suppliers this period.
+                    </p>
+                    <div
+                        v-for="method in payouts.methods"
+                        :key="method.name"
+                        class="flex items-center justify-between px-5 py-2.5"
+                    >
+                        <dt class="text-xs text-ink-muted">{{ method.name }}</dt>
+                        <dd class="tabular-nums text-sm text-ink">{{ money(method.total) }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between bg-surface-sunken px-5 py-3">
+                        <dt class="text-xs font-semibold text-ink">Total paid</dt>
+                        <dd class="tabular-nums text-lg font-bold text-ink">{{ money(payouts.totals.paid) }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between px-5 py-2.5">
+                        <dt class="text-xs text-ink-muted">on delivery · later</dt>
+                        <dd class="tabular-nums text-sm text-ink">{{ money(payouts.totals.on_delivery) }} · {{ money(payouts.totals.later) }}</dd>
+                    </div>
+                    <div class="flex items-center justify-between px-5 py-2.5">
+                        <dt class="text-xs text-ink-muted">Still owed to suppliers, as of today</dt>
+                        <dd class="tabular-nums text-sm" :class="Number(payouts.totals.overdue) > 0 ? 'font-semibold text-warning-700' : 'text-ink'">
+                            {{ money(payouts.totals.owed) }}
+                        </dd>
                     </div>
                 </dl>
             </section>

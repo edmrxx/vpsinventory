@@ -49,6 +49,12 @@ class PaymentMethod extends Model
         return $this->hasMany(SupplierPayment::class);
     }
 
+    /** Deliveries paid on delivery this way (phase 24.5). */
+    public function purchases(): HasMany
+    {
+        return $this->hasMany(Purchase::class);
+    }
+
     public function isCash(): bool
     {
         return $this->kind === PaymentKind::Cash;

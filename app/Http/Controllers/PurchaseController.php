@@ -13,6 +13,7 @@ use App\Models\Purchase;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseReturn;
 use App\Models\Supplier;
+use App\Models\PaymentMethod;
 use App\Models\SupplierPayment;
 use App\Services\PurchasePoster;
 use App\Support\Quantity;
@@ -47,9 +48,18 @@ class PurchaseController extends Controller
         $this->authorize('viewAny', Purchase::class);
 
         $filters = $this->validatedFilters($request);
+        $today = Carbon::today();
+
+        // Paid or owing (phase 24.5) is supplier money, which only those who
+        // may see supplier payments are shown — the column and its filter.
+        $seesPayment = $request->user()->can('viewAny', SupplierPayment::class);
+
+        if (! $seesPayment) {
+            $filters['payment'] = null;
+        }
 
         $query = Purchase::query()
-            ->with(['supplier:id,name', 'purchaseOrder:id,reference', 'location:id,name'])
+            ->with(['supplier:id,name', 'purchaseOrder:id,reference', 'location:id,name', 'paymentMethod:id,name'])
             ->withCount('lines')
             ->when($filters['supplier_id'], fn ($q, $id) => $q->where('supplier_id', $id))
             // Where it was received (phase 31.3).
@@ -58,7 +68,13 @@ class PurchaseController extends Controller
             ->when($filters['from'], fn ($q, $from) => $q->whereDate('purchase_date', '>=', $from))
             ->when($filters['to'], fn ($q, $to) => $q->whereDate('purchase_date', '<=', $to))
             // Who posted it. The dashboard links here with it set.
-            ->when($filters['posted_by'], fn ($q, $id) => $q->where('posted_by', $id));
+            ->when($filters['posted_by'], fn ($q, $id) => $q->where('posted_by', $id))
+            // Paid, owing or overdue (phase 24.5): a posted delivery's bill.
+            ->when($filters['payment'], fn ($q, $payment) => $q
+                ->where('status', DocumentStatus::Posted->value)
+                ->when($payment === 'paid', fn ($q) => $q->where('balance_due', 0))
+                ->when($payment === 'owing', fn ($q) => $q->where('balance_due', '>', 0))
+                ->when($payment === 'overdue', fn ($q) => $q->where('balance_due', '>', 0)->where('due_date', '<', $today->toDateString())));
 
         $table = TableQuery::for($query, $request)
             ->searchable(['reference', 'supplier_reference', 'supplier.name'])
@@ -80,6 +96,8 @@ class PurchaseController extends Controller
                 'total_amount' => $purchase->total_amount,
                 // What is still owed on it (phase 24), 0 once paid.
                 'balance_due' => $purchase->balance_due,
+                // How it stands with the supplier (phase 24.5), for those who may see it.
+                'payment' => $seesPayment ? $this->paymentStanding($purchase, $today) : null,
                 'status' => $purchase->status->value,
                 'status_label' => $purchase->status->label(),
                 'status_tone' => $purchase->status->tone(),
@@ -101,8 +119,16 @@ class PurchaseController extends Controller
                     ['value' => DocumentStatus::Posted->value, 'label' => 'Posted'],
                     ['value' => DocumentStatus::Voided->value, 'label' => 'Voided'],
                 ],
+                'payments' => [
+                    ['value' => 'paid', 'label' => 'Paid'],
+                    ['value' => 'owing', 'label' => 'Owing'],
+                    ['value' => 'overdue', 'label' => 'Overdue'],
+                ],
             ],
-            'can' => ['create' => $request->user()->can('create', Purchase::class)],
+            'can' => [
+                'create' => $request->user()->can('create', Purchase::class),
+                'seePayment' => $seesPayment,
+            ],
         ]);
     }
 
@@ -140,6 +166,8 @@ class PurchaseController extends Controller
             'fromOrder' => $fromOrder,
             'suppliers' => $this->supplierOptions(active: true),
             'products' => Product::buyingOptions(),
+            // How whatever is paid on delivery is paid (phase 24.5).
+            'paymentMethods' => PaymentMethod::options(),
             // Where the goods may go on the shelf (phase 31.3), and the one
             // the form starts on: the order's Deliver to, else the default.
             'locations' => Location::options(),
@@ -317,6 +345,7 @@ class PurchaseController extends Controller
             'lines.orderLine',
             'purchaseOrder:id,reference',
             'location:id,name',
+            'paymentMethod:id,name',
             'allocations' => fn ($q) => $q->orderBy('id'),
             'allocations.payment:id,reference,payment_date,status',
             'postedBy:id,name',
@@ -350,6 +379,11 @@ class PurchaseController extends Controller
                 'due_date' => $purchase->due_date?->format('d M Y'),
                 'overdue' => $purchase->isPosted() && (float) $purchase->balance_due > 0
                     && $purchase->due_date !== null && $purchase->due_date->lt(Carbon::today()),
+                // What was paid on delivery and how (phase 24.5). A delivery
+                // from before names no method: paid, how not written down.
+                'paid_on_delivery' => $purchase->paidOnDelivery(),
+                'payment_method' => $purchase->paymentMethod?->name,
+                'payment_reference' => $purchase->payment_reference,
                 'payments' => $purchase->allocations->map(fn ($allocation) => [
                     'id' => $allocation->payment?->id,
                     'reference' => $allocation->payment?->reference,
@@ -465,9 +499,11 @@ class PurchaseController extends Controller
             'from' => ['nullable', 'date_format:Y-m-d'],
             'to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:from'],
             'posted_by' => ['nullable', 'integer', 'exists:users,id'],
+            'payment' => ['nullable', 'in:paid,owing,overdue'],
         ]);
 
         return [
+            'payment' => $validated['payment'] ?? null,
             'supplier_id' => isset($validated['supplier_id']) ? (int) $validated['supplier_id'] : null,
             'location_id' => isset($validated['location_id']) ? (int) $validated['location_id'] : null,
             'status' => $validated['status'] ?? null,
@@ -475,6 +511,37 @@ class PurchaseController extends Controller
             'to' => $validated['to'] ?? null,
             'posted_by' => isset($validated['posted_by']) ? (int) $validated['posted_by'] : null,
         ];
+    }
+
+    /**
+     * One delivery's bill in a word (phase 24.5): paid on delivery and how,
+     * paid later, or what is still owed and when — the list's Payment column.
+     *
+     * @return array{label: string, detail: ?string, tone: string}
+     */
+    protected function paymentStanding(Purchase $purchase, Carbon $today): array
+    {
+        if (! $purchase->isPosted()) {
+            return ['label' => '—', 'detail' => null, 'tone' => 'neutral'];
+        }
+
+        $owed = (float) $purchase->balance_due;
+
+        if ($owed > 0) {
+            $overdue = $purchase->due_date !== null && $purchase->due_date->lt($today);
+
+            return [
+                'label' => $overdue ? 'Overdue' : 'Owing',
+                'detail' => number_format($owed, 2).($purchase->due_date ? ' · due '.$purchase->due_date->format('d M') : ''),
+                'tone' => $overdue ? 'danger' : 'warning',
+            ];
+        }
+
+        if ((float) $purchase->on_account > 0) {
+            return ['label' => 'Paid', 'detail' => 'paid later', 'tone' => 'success'];
+        }
+
+        return ['label' => 'Paid', 'detail' => $purchase->paymentMethod?->name ?? 'on delivery', 'tone' => 'success'];
     }
 
     /**

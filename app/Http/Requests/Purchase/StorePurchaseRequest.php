@@ -7,6 +7,7 @@ use App\Models\InventoryMovement;
 use App\Models\Location;
 use App\Models\Purchase;
 use App\Models\PurchaseOrder;
+use App\Support\DeliveryPayment;
 use App\Support\OrderReceiving;
 use App\Support\Quantity;
 use App\Support\UnitConversion;
@@ -72,6 +73,12 @@ class StorePurchaseRequest extends FormRequest
             'notes' => ['nullable', 'string', 'max:1000'],
             // On the supplier's account rather than paid on delivery (phase 24).
             'on_account' => ['nullable', 'boolean'],
+            // Phase 24.5: a down payment today, the rest on account; and how
+            // whatever is paid today was paid. Weighed in after(), by
+            // DeliveryPayment. No method key at all is cash.
+            'paid_now' => ['nullable', 'numeric', 'max:999999999999.99'],
+            'payment_method_id' => ['nullable', 'integer'],
+            'payment_reference' => ['nullable', 'string', 'max:60'],
             'idempotency_key' => ['nullable', 'uuid'],
 
             'lines' => ['required', 'array', 'min:1', 'max:'.self::MAX_LINES],
@@ -131,8 +138,37 @@ class StorePurchaseRequest extends FormRequest
                 } elseif (collect($this->input('lines', []))->contains(fn ($line) => ! empty($line['purchase_order_line_id']))) {
                     $validator->errors()->add('purchase_order_id', 'A line is tied to an order, but no order is picked.');
                 }
+
+                foreach ($this->payment()['errors'] as $field => $message) {
+                    $validator->errors()->add($field, $message);
+                }
             },
         ];
+    }
+
+    /**
+     * How this delivery is paid (phase 24.5), as `PurchasePoster` will weigh
+     * it: the total line by line to the centavo, exactly as the poster prices
+     * it.
+     *
+     * @return array{paid: int, on_account: int, payment_method_id: ?int, payment_reference: ?string, errors: array<string, string>}
+     */
+    public function payment(): array
+    {
+        $total = 0;
+
+        foreach ($this->input('lines', []) as $line) {
+            $total += Quantity::cents(Quantity::toMilli($line['quantity'] ?? 0), round((float) ($line['unit_cost'] ?? 0), 2));
+        }
+
+        return DeliveryPayment::weigh(
+            $total,
+            $this->boolean('on_account'),
+            $this->input('paid_now'),
+            $this->has('payment_method_id'),
+            $this->input('payment_method_id'),
+            $this->input('payment_reference'),
+        );
     }
 
     /**
@@ -192,7 +228,10 @@ class StorePurchaseRequest extends FormRequest
             // made the four documents compare it the same way).
             && (int) ($this->has('location_id') ? $this->integer('location_id') : Location::default()?->id) === (int) $purchase->location_id
             && (string) $this->input('supplier_reference') === (string) $purchase->supplier_reference
-            && (string) $this->input('purchase_date') === $purchase->purchase_date?->toDateString();
+            && (string) $this->input('purchase_date') === $purchase->purchase_date?->toDateString()
+            // How it was paid (phase 24.5): a retry paid another way is another delivery.
+            && $this->payment()['on_account'] === Quantity::centavos((float) $purchase->on_account)
+            && $this->payment()['payment_method_id'] === ($purchase->payment_method_id === null ? null : (int) $purchase->payment_method_id);
 
         if (! $sameHeader) {
             return false;

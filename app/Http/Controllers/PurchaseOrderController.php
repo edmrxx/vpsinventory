@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\DocumentStatus;
 use App\Enums\PurchaseOrderStatus;
 use App\Exceptions\PurchaseOrderException;
 use App\Http\Requests\PurchaseOrder\CancelPurchaseOrderRequest;
@@ -14,6 +15,7 @@ use App\Models\Purchase;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseRequest;
 use App\Models\Supplier;
+use App\Models\SupplierPayment;
 use App\Services\PurchaseOrderDesk;
 use App\Support\Quantity;
 use App\Support\StaffOptions;
@@ -25,6 +27,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -307,6 +311,11 @@ class PurchaseOrderController extends Controller
                 'received_at' => $posted
                     ->map(fn ($purchase) => $purchase->location?->name)
                     ->filter()->unique()->values()->all(),
+                // What its deliveries were paid and still owe (phase 24.5),
+                // for those who may see supplier money; null before any.
+                'payment' => $posted->isNotEmpty() && $user->can('viewAny', SupplierPayment::class)
+                    ? $this->deliveriesPaid($posted)
+                    : null,
                 'request' => $order->purchaseRequest ? [
                     'id' => $order->purchaseRequest->id,
                     'reference' => $order->purchaseRequest->reference,
@@ -486,6 +495,31 @@ class PurchaseOrderController extends Controller
             'ordered_by' => isset($validated['ordered_by']) ? (int) $validated['ordered_by'] : null,
             'from' => $validated['from'] ?? null,
             'to' => $validated['to'] ?? null,
+        ];
+    }
+
+    /**
+     * What an order's standing deliveries were paid — on delivery, and by
+     * posted supplier payments against them — and what they still owe. One
+     * query for the payments.
+     *
+     * @param  Collection<int, Purchase>  $posted
+     * @return array{paid: string, owed: string}
+     */
+    protected function deliveriesPaid($posted): array
+    {
+        $onDelivery = $posted->sum(fn ($purchase) => Quantity::centavos((float) $purchase->paidOnDelivery()));
+        $owed = $posted->sum(fn ($purchase) => Quantity::centavos((float) $purchase->balance_due));
+
+        $later = (int) round(100 * (float) DB::table('supplier_payment_allocations')
+            ->join('supplier_payments', 'supplier_payments.id', '=', 'supplier_payment_allocations.supplier_payment_id')
+            ->whereIn('supplier_payment_allocations.purchase_id', $posted->pluck('id'))
+            ->where('supplier_payments.status', DocumentStatus::Posted->value)
+            ->sum('supplier_payment_allocations.amount'));
+
+        return [
+            'paid' => number_format(($onDelivery + $later) / 100, 2, '.', ''),
+            'owed' => number_format($owed / 100, 2, '.', ''),
         ];
     }
 }

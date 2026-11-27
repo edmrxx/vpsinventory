@@ -33,7 +33,7 @@ class PaymentMethodController extends Controller
         // The count rides along on every row, so the policy can refuse a
         // delete without asking the database once per row.
         $query = PaymentMethod::query()
-            ->withCount(['payments', 'customerPayments', 'supplierPayments'])
+            ->withCount(['payments', 'customerPayments', 'supplierPayments', 'purchases'])
             ->when($filters['status'] !== null, fn ($q) => $q->where('is_active', $filters['status'] === 'active'))
             ->when($filters['kind'] !== null, fn ($q) => $q->where('kind', $filters['kind']));
 
@@ -52,7 +52,7 @@ class PaymentMethodController extends Controller
                 'kind_label' => $method->kind->label(),
                 'is_cash' => $method->isCash(),
                 'requires_reference' => $method->requires_reference,
-                'payments_count' => $method->payments_count + $method->customer_payments_count + $method->supplier_payments_count,
+                'payments_count' => $method->payments_count + $method->customer_payments_count + $method->supplier_payments_count + $method->purchases_count,
                 'is_active' => $method->is_active,
                 'can' => [
                     'update' => $request->user()->can('update', $method),

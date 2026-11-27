@@ -92,6 +92,7 @@ class PaymentMethodPolicy
     protected function customerPaymentCount(PaymentMethod $method): int
     {
         return (int) ($method->customer_payments_count ?? $method->customerPayments()->count())
-            + (int) ($method->supplier_payments_count ?? $method->supplierPayments()->count());
+            + (int) ($method->supplier_payments_count ?? $method->supplierPayments()->count())
+            + (int) ($method->purchases_count ?? $method->purchases()->count());
     }
 }

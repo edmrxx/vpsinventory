@@ -321,7 +321,8 @@ class ResetBusinessDataTest extends TestCase
 
         // Set-up, like the settings: the ways the shop is paid stay, and the
         // till still has its cash method.
-        $this->assertSame(4, PaymentMethod::count());
+        // The four of phase 16 and Cheque (phase 24.5).
+        $this->assertSame(5, PaymentMethod::count());
         $this->assertNotNull(PaymentMethod::cash());
 
         $this->assertSame($users, User::count());

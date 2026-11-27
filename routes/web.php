@@ -213,6 +213,11 @@ Route::middleware('auth')->group(function () {
     Route::get('payables', [PayablesController::class, 'index'])
         ->middleware('permission:supplier_payments.view')
         ->name('payables.index');
+    // What was paid to suppliers in a period, by supplier and by method
+    // (phase 24.5, CR-5): the Paid side of Payables.
+    Route::get('payables/paid', [PayablesController::class, 'paid'])
+        ->middleware('permission:supplier_payments.view')
+        ->name('payables.paid');
 
     Route::post('purchases/{purchase}/void', [PurchaseController::class, 'void'])
         ->middleware('permission:purchases.void')
