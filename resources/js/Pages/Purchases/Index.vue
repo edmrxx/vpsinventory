@@ -22,7 +22,7 @@ const props = defineProps({
 
 const { money } = useMoney()
 
-const columns = [
+const columns = computed(() => [
     { key: 'reference', label: 'Reference', sortable: true, width: '150px' },
     { key: 'purchase_date', label: 'Date', sortable: true, width: '120px' },
     { key: 'supplier', label: 'Supplier' },
@@ -31,9 +31,11 @@ const columns = [
     { key: 'location', label: 'Received at', hideOnMobile: true, width: '140px' },
     { key: 'lines_count', label: 'Items', align: 'right', width: '80px' },
     { key: 'total_amount', label: 'Total', sortable: true, align: 'right', width: '130px' },
+    // Paid or owing (phase 24.5), only for those who may see supplier money.
+    ...(props.can.seePayment ? [{ key: 'payment', label: 'Payment', width: '150px' }] : []),
     { key: 'status', label: 'Status', sortable: true, align: 'center', width: '110px' },
     { key: 'actions', label: '', align: 'right', width: '70px' },
-]
+])
 
 const filterState = reactive({
     supplier_id: props.filters.supplier_id ?? '',
@@ -42,6 +44,7 @@ const filterState = reactive({
     from: props.filters.from ?? '',
     to: props.filters.to ?? '',
     posted_by: props.filters.posted_by ?? '',
+    payment: props.filters.payment ?? '',
 })
 
 watch(
@@ -53,6 +56,7 @@ watch(
         filterState.from = incoming.from ?? ''
         filterState.to = incoming.to ?? ''
         filterState.posted_by = incoming.posted_by ?? ''
+        filterState.payment = incoming.payment ?? ''
     }
 )
 
@@ -63,6 +67,7 @@ const extraQuery = computed(() => ({
     from: filterState.from || undefined,
     to: filterState.to || undefined,
     posted_by: filterState.posted_by || undefined,
+    payment: filterState.payment || undefined,
 }))
 
 const hasFilters = computed(() =>
@@ -76,6 +81,7 @@ function clearFilters() {
     filterState.from = ''
     filterState.to = ''
     filterState.posted_by = ''
+    filterState.payment = ''
 }
 
 /** The document open in the dialog, as its own address, or null. */
@@ -123,6 +129,13 @@ const viewing = ref(null)
                     label="Staff"
                     any-label="All staff"
                     :options="options.staff ?? []"
+                />
+                <FilterSelect
+                    v-if="can.seePayment"
+                    v-model="filterState.payment"
+                    label="Payment"
+                    any-label="Paid or owing"
+                    :options="options.payments ?? []"
                 />
 
                 <label class="block">
@@ -213,6 +226,13 @@ const viewing = ref(null)
                 <span v-if="row.status === 'posted' && Number(row.balance_due) > 0" class="block text-2xs font-semibold text-warning-700">
                     owes {{ money(row.balance_due) }}
                 </span>
+            </template>
+
+            <template #cell-payment="{ row }">
+                <template v-if="row.payment">
+                    <ActionBadge :label="row.payment.label" :tone="row.payment.tone" />
+                    <span v-if="row.payment.detail" class="mt-0.5 block text-2xs text-ink-subtle tabular-nums">{{ row.payment.detail }}</span>
+                </template>
             </template>
 
             <template #cell-status="{ row }">

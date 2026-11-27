@@ -1813,6 +1813,42 @@ The rules:
   every bill's balance and that no supplier's credit was used beyond what it
   had.
 
+### Paid and owed to suppliers (phase 24.5, CR-5)
+
+The client's request after the canvass meeting: after a purchase request, an
+order and the delivery, see **which suppliers were paid in cash and which are
+payables**.
+
+- **How a delivery is paid**, on the purchase form: *Paid in full*, *Part now,
+  rest on account* (a down payment) or *All on account*. Whatever is paid
+  today names **Paid with** — Cash, GCash, Maya, Bank transfer, Card or the
+  new **Cheque** — and the reference the method asks for (the cheque number).
+  `purchases.payment_method_id` / `payment_reference`; what was paid on
+  delivery is always `total_amount − on_account` (`Purchase::paidOnDelivery()`),
+  no column of its own. `App\Support\DeliveryPayment` is the only place it
+  is weighed — the request asks it for the errors, `PurchasePoster` again on
+  the total it priced. **A form with no `payment_method_id` key is paid in
+  cash**, as a sale with no `payments` key; a delivery from before shows
+  *method not recorded*. A method a delivery used is never deleted.
+- **Payables → Paid** (`/payables/paid`, beside the **Owed** tab): for a
+  period (this month by default) and a supplier, one row per supplier —
+  Bought, Paid on delivery, Paid later, Still owed, Past due — and how the
+  money went out by method. Every figure opens the list behind it.
+  `SupplierAccount::paidSummary()`, five grouped queries; paid later is the
+  money of posted supplier payments, never the supplier credit they used.
+- **Purchases list**: a **Payment** column (*Paid · Cash*, *Owing ₱700 · due
+  12 Dec*, *Overdue*) and a **Payment** filter (paid, owing, overdue).
+- **A purchase order** says *Paid ₱X · Owed ₱Y* across its standing
+  deliveries.
+- **Reports**: **Money paid to suppliers** by method, and the same rows in
+  the spreadsheet's summary; left out while a payment method narrows the
+  sales, as purchases are.
+- **Who sees it**: all of it sits behind `supplier_payments.view` — Admin
+  only, as before. Staff still record a delivery and choose how it was paid;
+  they never see the Paid tab, the column, the order's line or the block.
+- Deploy: `migrate` (two columns and the Cheque method) and the new
+  `public/build`. No new permission or setting.
+
 ### Quotations
 
 Phase 28, the first of stage 7 (taken ahead of stages 4 and 6, the client's

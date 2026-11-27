@@ -28,6 +28,8 @@ class Purchase extends Model
     protected $fillable = [
         'reference', 'supplier_reference', 'supplier_id', 'location_id', 'purchase_order_id', 'purchase_date',
         'on_account', 'balance_due', 'due_date',
+        // How the part paid on delivery was paid (phase 24.5).
+        'payment_method_id', 'payment_reference',
         'status', 'total_amount', 'vat_rate', 'notes', 'idempotency_key',
         'posted_at', 'posted_by',
     ];
@@ -45,6 +47,21 @@ class Purchase extends Model
             'posted_at' => 'datetime',
             'voided_at' => 'datetime',
         ];
+    }
+
+    /** How the part paid on delivery was paid (phase 24.5); null before it. */
+    public function paymentMethod(): BelongsTo
+    {
+        return $this->belongsTo(PaymentMethod::class);
+    }
+
+    /**
+     * What was paid on delivery, as posted: the bill less what went on the
+     * supplier's account. All of it, a down payment, or nothing.
+     */
+    public function paidOnDelivery(): string
+    {
+        return bcsub((string) $this->total_amount, (string) $this->on_account, 2);
     }
 
     public function supplier(): BelongsTo

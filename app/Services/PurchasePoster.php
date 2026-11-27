@@ -13,6 +13,7 @@ use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseLine;
 use App\Models\PurchaseOrder;
+use App\Support\DeliveryPayment;
 use App\Support\OrderReceiving;
 use App\Support\SupplierAccount;
 use App\Models\Supplier;
@@ -21,6 +22,7 @@ use App\Support\UnitConversion;
 use App\Support\Vat;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Writes a purchase and posts it in the same breath.
@@ -145,17 +147,34 @@ class PurchasePoster
 
             $this->rememberLayers($purchase, $movements);
 
-            // Paid on delivery, or on the supplier's account (phase 24): the
-            // whole bill then waits for a supplier payment, due on the day
-            // the supplier's terms say, stamped here once.
-            $onAccount = ! empty($header['on_account']);
+            // Paid on delivery, on the supplier's account (phase 24), or a
+            // down payment with the rest on account (phase 24.5). What is on
+            // account waits for a supplier payment, due on the day the
+            // supplier's terms say, stamped here once. Weighed again here,
+            // on the total just priced: the form's figure is never trusted.
+            $paying = DeliveryPayment::weigh(
+                Quantity::centavos(round($total, 2)),
+                ! empty($header['on_account']),
+                $header['paid_now'] ?? null,
+                array_key_exists('payment_method_id', $header),
+                $header['payment_method_id'] ?? null,
+                $header['payment_reference'] ?? null,
+            );
+
+            if ($paying['errors'] !== []) {
+                throw ValidationException::withMessages($paying['errors']);
+            }
+
+            $owed = $paying['on_account'] / 100;
             $supplier = Supplier::find($header['supplier_id']);
 
             $purchase->forceFill([
                 'total_amount' => round($total, 2),
-                'on_account' => $onAccount ? round($total, 2) : 0,
-                'balance_due' => $onAccount ? round($total, 2) : 0,
-                'due_date' => $onAccount ? SupplierAccount::dueDate($supplier, $date) : null,
+                'on_account' => $owed,
+                'balance_due' => $owed,
+                'due_date' => $owed > 0 ? SupplierAccount::dueDate($supplier, $date) : null,
+                'payment_method_id' => $paying['payment_method_id'],
+                'payment_reference' => $paying['payment_reference'],
             ])->saveQuietly();
 
             $this->rememberLastCost($priced);

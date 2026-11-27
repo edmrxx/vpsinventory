@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { Link, useForm } from '@inertiajs/vue3'
 import { FileText } from '@lucide/vue'
 import AppLayout from '../../Layouts/AppLayout.vue'
@@ -10,9 +10,8 @@ import SelectField from '../../Components/SelectField.vue'
 import TextField from '../../Components/TextField.vue'
 import TextareaField from '../../Components/TextareaField.vue'
 import LineItems from '../../Components/LineItems.vue'
-import ToggleSwitch from '../../Components/ToggleSwitch.vue'
 import { confirmAction, showValidationErrors } from '../../lib/swal'
-import { count, useVat } from '../../lib/money'
+import { count, lineCentavos, useMoney, useVat } from '../../lib/money'
 
 defineOptions({ layout: AppLayout })
 
@@ -29,7 +28,11 @@ const props = defineProps({
      * everything still to come, each carrying its `purchase_order_line_id`.
      */
     fromOrder: { type: Object, default: null },
+    /** How whatever is paid on delivery is paid (phase 24.5): cash first. */
+    paymentMethods: { type: Array, default: () => [] },
 })
+
+const { money } = useMoney()
 
 /**
  * Whether this delivery carries VAT depends on the supplier, not on us.
@@ -49,8 +52,12 @@ const form = useForm({
     // Where the goods go on the shelf (phase 31.3): the order's Deliver to,
     // else the default location.
     location_id: props.fromOrder?.deliver_to_location_id ?? props.defaultLocationId ?? '',
-    // Paid on delivery unless put on the supplier's account (phase 24).
+    // Paid on delivery unless put on the supplier's account (phase 24); a
+    // down payment pays part now and puts the rest on account (phase 24.5).
     on_account: false,
+    paid_now: '',
+    payment_method_id: props.paymentMethods[0]?.value ?? '',
+    payment_reference: '',
     notes: '',
     // Sent back untouched, so a double-clicked Save lands on the purchase it
     // already made instead of making a second one.
@@ -81,7 +88,46 @@ const dueOn = computed(() => {
     }
 })
 
-const headerFields = ['supplier_id', 'supplier_reference', 'purchase_date', 'location_id', 'notes', 'purchase_order_id', 'on_account']
+const headerFields = [
+    'supplier_id', 'supplier_reference', 'purchase_date', 'location_id', 'notes', 'purchase_order_id',
+    'on_account', 'paid_now', 'payment_method_id', 'payment_reference',
+]
+
+/*
+ * How this delivery is paid (phase 24.5): in full today, part today and the
+ * rest on the supplier's account, or all on account. The three map onto
+ * `on_account` and `paid_now`, which the server weighs again.
+ */
+const PAYMENT_MODES = [
+    { value: 'full', label: 'Paid in full' },
+    { value: 'part', label: 'Part now, rest on account' },
+    { value: 'account', label: 'All on account' },
+]
+
+const paymentMode = ref('full')
+
+watch(paymentMode, (mode) => {
+    form.on_account = mode !== 'full'
+    form.paid_now = mode === 'part' ? form.paid_now : ''
+})
+
+/** What the delivery comes to, as typed: the same sum the server prices. */
+const deliveryTotal = computed(() =>
+    form.lines.reduce((sum, line) => sum + lineCentavos(line.unit_cost, line.quantity), 0) / 100
+)
+
+const paidToday = computed(() => {
+    if (paymentMode.value === 'full') return deliveryTotal.value
+    if (paymentMode.value === 'account') return 0
+
+    return Math.min(Math.max(Number(form.paid_now || 0), 0), deliveryTotal.value)
+})
+
+const owedLater = computed(() => Math.max(0, Math.round((deliveryTotal.value - paidToday.value) * 100) / 100))
+
+const paidWith = computed(() =>
+    props.paymentMethods.find((method) => String(method.value) === String(form.payment_method_id)) ?? null
+)
 
 const receivingAt = computed(() =>
     props.locations.find((row) => String(row.value) === String(form.location_id))?.label ?? null
@@ -265,15 +311,85 @@ async function submit() {
                     </FormField>
                 </div>
 
-                <div class="mt-5 rounded-field bg-surface-muted p-4">
-                    <ToggleSwitch
-                        v-model="form.on_account"
-                        label="On the supplier's account"
-                        :description="form.on_account && dueOn
-                            ? `Not paid today. The bill is due on ${dueOn.label}${dueOn.terms ? `, ${dueOn.terms} days from delivery` : ', the day it was delivered'}, and is paid later under Supplier Payments.`
-                            : 'Off: paid on delivery. On: the shop pays this bill later, by the supplier\'s payment terms.'"
-                    />
-                    <p v-if="form.errors.on_account" class="mt-1 text-xs font-medium text-danger-700">{{ form.errors.on_account }}</p>
+                <!-- How it is paid (phase 24.5) -->
+                <div class="mt-5 space-y-4 rounded-field bg-surface-muted p-4">
+                    <div>
+                        <p id="payment-mode-label" class="text-sm font-medium text-ink">How this delivery is paid</p>
+                        <div
+                            class="mt-2 grid gap-1 rounded-field bg-surface-sunken p-1 sm:grid-cols-3"
+                            role="radiogroup"
+                            aria-labelledby="payment-mode-label"
+                        >
+                            <button
+                                v-for="mode in PAYMENT_MODES"
+                                :key="mode.value"
+                                type="button"
+                                role="radio"
+                                :aria-checked="paymentMode === mode.value"
+                                class="rounded-[calc(var(--radius-field)-0.25rem)] px-3 py-2 text-sm font-medium transition-colors"
+                                :class="paymentMode === mode.value ? 'bg-surface text-ink shadow-xs-soft' : 'text-ink-muted hover:text-ink'"
+                                :data-payment-mode="mode.value"
+                                @click="paymentMode = mode.value"
+                            >
+                                {{ mode.label }}
+                            </button>
+                        </div>
+                        <p v-if="form.errors.on_account" class="mt-1 text-xs font-medium text-danger-700">{{ form.errors.on_account }}</p>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-3">
+                        <FormField
+                            v-if="paymentMode === 'part'"
+                            label="Paid now"
+                            for="paid_now"
+                            :error="form.errors.paid_now"
+                            :hint="`Up to ${money(deliveryTotal)}.`"
+                        >
+                            <TextField
+                                id="paid_now"
+                                v-model="form.paid_now"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                :invalid="!!form.errors.paid_now"
+                            />
+                        </FormField>
+
+                        <template v-if="paymentMode !== 'account'">
+                            <FormField label="Paid with" for="payment_method_id" :error="form.errors.payment_method_id">
+                                <SelectField
+                                    id="payment_method_id"
+                                    v-model="form.payment_method_id"
+                                    :options="paymentMethods"
+                                    :invalid="!!form.errors.payment_method_id"
+                                    placeholder="Pick a method"
+                                />
+                            </FormField>
+                            <FormField
+                                v-if="paidWith?.reference"
+                                :label="`${paidWith.label} reference`"
+                                for="payment_reference"
+                                :error="form.errors.payment_reference"
+                                hint="The cheque, transfer or e-wallet number."
+                            >
+                                <TextField
+                                    id="payment_reference"
+                                    v-model="form.payment_reference"
+                                    maxlength="60"
+                                    :invalid="!!form.errors.payment_reference"
+                                />
+                            </FormField>
+                        </template>
+                    </div>
+
+                    <p v-if="deliveryTotal > 0" class="text-xs text-ink-muted" data-payment-summary>
+                        <template v-if="owedLater > 0">
+                            <span v-if="paidToday > 0">{{ money(paidToday) }} paid today. </span>
+                            {{ money(owedLater) }} goes on the supplier's account<span v-if="dueOn">, due {{ dueOn.label }}{{ dueOn.terms ? `, ${dueOn.terms} days from delivery` : ', the day it was delivered' }}</span>,
+                            and is paid later under Supplier Payments.
+                        </template>
+                        <template v-else>Paid in full on delivery: {{ money(paidToday) }}.</template>
+                    </p>
                 </div>
 
                 <p class="mt-5 text-xs text-ink-subtle">

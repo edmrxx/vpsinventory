@@ -109,6 +109,27 @@ async function voidPurchase() {
             <span class="text-ink-muted">Voiding it puts these goods back on the order as still to come.</span>
         </p>
 
+        <!-- Paid on delivery, and how (phase 24.5) -->
+        <section v-if="Number(purchase.paid_on_delivery) > 0" class="card mb-4 p-4 sm:p-5" data-paid-on-delivery>
+            <div class="flex items-start gap-3">
+                <span class="grid size-9 shrink-0 place-items-center rounded-full bg-success-50 text-success-700">
+                    <Landmark :size="18" />
+                </span>
+                <div class="text-sm">
+                    <p class="font-semibold text-ink">
+                        {{ Number(purchase.on_account) > 0 ? 'Down payment on delivery' : 'Paid on delivery' }}
+                    </p>
+                    <p class="text-xs text-ink-muted">
+                        {{ money(purchase.paid_on_delivery) }}
+                        <template v-if="purchase.payment_method">
+                            by {{ purchase.payment_method }}<span v-if="purchase.payment_reference">, ref. {{ purchase.payment_reference }}</span>.
+                        </template>
+                        <template v-else>— how it was paid was not recorded (before 27 November 2026).</template>
+                    </p>
+                </div>
+            </div>
+        </section>
+
         <!-- The bill, when it went on the supplier's account (phase 24) -->
         <section v-if="Number(purchase.on_account) > 0" class="card mb-4 p-4 sm:p-5">
             <div class="flex flex-wrap items-start justify-between gap-3">

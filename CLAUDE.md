@@ -269,6 +269,15 @@ The client's scope (`SCOPE.md`) is being built on top of that, by phase:
     migration is applied locally. No new permission, so a deploy runs
     `migrate`, `config:cache` (a new setting) and needs the new
     `public/build`.
+24.5 **Done.** Paid and owed to suppliers (CR-5, the client's meeting after
+    the canvass, 27 November 2026) — a delivery paid in full, part now (a down
+    payment) or all on account, with how it was paid and the reference; a
+    Cheque method; Payables → Paid by supplier and by method; a Payment column
+    and filter on Purchases; Paid · Owed on an order; Money paid to suppliers
+    on Reports. Built on the user's GO! on all recommendations. 1,341 PHP tests
+    and 239 front-end tests pass; the migration is applied locally and
+    `inventory:verify` is clean. No new permission or setting, so a deploy
+    runs `migrate` and needs the new `public/build`.
 28.1 **Done.** Mobilization (CR-4, the client's request of 27 November 2026)
     — a charge for bringing the goods to the site on a quotation, carried to
     the sales order and the sale: total = subtotal − discount + mobilization,
@@ -831,6 +840,32 @@ Decisions already taken for the phases ahead, so they are not reopened:
   (`print:` classes, like the statement), signed *Prepared by* the placer
   and *Approved by* the request's approver. A supplier, product or unit on
   an order cannot be deleted. Supplier payment terms wait for phase 24.
+- **A delivery says how it was paid** (phase 24.5, CR-5, built on GO! with
+  these defaults). Paid in full on delivery, **part now with the rest on
+  account** (a down payment: `on_account` on and `paid_now` more than
+  nothing), or all on account. Whatever is paid today names a method still
+  switched on and its reference when the method asks
+  (`PaymentSettlement::methodRefusal()`, the sale's rule), on
+  `purchases.payment_method_id` / `payment_reference`; **what was paid on
+  delivery is `total_amount − on_account`**, never a column.
+  **`App\Support\DeliveryPayment` is the only place it is weighed** — the
+  request asks it, `PurchasePoster` asks again on the total it priced and
+  throws a ValidationException. **No `payment_method_id` key at all is cash**
+  (a stale tab, as a sale with no `payments` key); an empty one with
+  something paid is refused; nothing paid names no method. `matchesSaved()`
+  compares what went on account and the method. A **Cheque** method (kind
+  *other*, needs a reference) is put in by the migration unless one exists;
+  `data:reset` keeps it with the others. A method a delivery used is never
+  deleted (`PaymentMethodPolicy` counts `purchases`). **Payables → Paid**
+  (`PayablesController::paid`, `SupplierAccount::paidSummary()` — the only
+  reading of money paid out): per supplier, for a period, bought, paid on
+  delivery, paid later (supplier payments' money, never their credit), still
+  owed and past due as of today, and by method (*Not recorded* for a delivery
+  from before). The Purchases list's Payment column and filter, an order's
+  *Paid · Owed* (`deliveriesPaid()`, one query) and Reports' **Money paid to
+  suppliers** (`ReportBook`'s `payouts` block) read the same. **All of it is
+  behind `supplier_payments.view`** — Admin only; Staff still choose how a
+  delivery they record was paid.
 - **The shop owes its suppliers, and pays them against named bills**
   (phase 24, built on GO! with these defaults). **The delivery is the
   bill**: `purchases.on_account` is what went on the supplier's account as

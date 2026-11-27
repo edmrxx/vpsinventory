@@ -53,6 +53,7 @@ const done = { onDone: () => emit('close') }
                             { label: 'Expected', value: data.order.expected_date ?? 'Not said' },
                             { label: 'Deliver to', value: data.order.deliver_to?.name ?? 'Not said' },
                             ...(data.order.received_at?.length ? [{ label: 'Received at', value: data.order.received_at.join(', ') }] : []),
+                            ...(data.order.payment ? [{ label: 'Paid · Owed', value: `${money(data.order.payment.paid)} · ${money(data.order.payment.owed)}` }] : []),
                             { label: 'From request', value: data.order.request?.reference ?? 'Ordered directly' },
                             { label: 'Placed by', value: data.order.ordered_by },
                             { label: 'Approved by', value: data.order.draft ? 'Not approved yet' : (data.order.approved_by ?? (data.order.approved_at ? 'Before approval began' : null)) },

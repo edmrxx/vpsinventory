@@ -19,8 +19,8 @@ reported. The rule for doing that is in `CLAUDE.md`, under "Scope checklist".
 
 | | |
 |---|---|
-| **Current stage** | Stage 8 — locations, counts, losses: ✅ **done** (all 8 phases: 30, 31.1 to 31.5, 32 and 33), taken ahead of stages 4 and 6 on 20 November 2026. Stages 1, 2, 3, 5, 7, 8 and 9 and CR-1 to CR-4 ✅ done; stage 5 still has one box open — pending purchase quantities on the Stock screen (#12). Stages 4 and 6 are left |
-| **Current phase** | Phase 28.1 ✅ done (**Mobilization**, CR-4: a charge for bringing the goods to the site on a quotation, carried to the order and the sale). Before it, phase 35.1 ✅ done (**a light or a dark screen**, CR-3). Before that, phase 33 ✅ done (**loss reports**: damaged, expired, rusted, stolen or missing goods reported with photos, held aside at their location, written off only when an approver approves — or rejected, freeing the goods) |
+| **Current stage** | Stage 8 — locations, counts, losses: ✅ **done** (all 8 phases: 30, 31.1 to 31.5, 32 and 33), taken ahead of stages 4 and 6 on 20 November 2026. Stages 1, 2, 3, 5, 7, 8 and 9 and CR-1 to CR-5 ✅ done; stage 5 still has one box open — pending purchase quantities on the Stock screen (#12). Stages 4 and 6 are left |
+| **Current phase** | Phase 24.5 ✅ done (**Paid and owed to suppliers**, CR-5: how a delivery is paid, a down payment, Payables → Paid by supplier and method). Before it, phase 28.1 ✅ done (**Mobilization**, CR-4: a charge for bringing the goods to the site on a quotation, carried to the order and the sale). Before it, phase 35.1 ✅ done (**a light or a dark screen**, CR-3). Before that, phase 33 ✅ done (**loss reports**: damaged, expired, rusted, stolen or missing goods reported with photos, held aside at their location, written off only when an approver approves — or rejected, freeing the goods) |
 | **Waiting on** | **GO!** for the next stage — stage 4 (cashier shifts) or stage 6 (pricing rules and approvals). Decision 4 still has two questions open, each answered for now by a default: whether the till may ever sell from a warehouse (*a store only*, 31.4), and who may transfer and whether a transfer needs approval (*Staff may, no approval*, 31.5). Decision 2 still waits for stage 6 |
 | **Next stage** | Stage 4 (phase 20) or stage 6 (phases 25 to 27), in the order the user picks; stage 6 waits on decisions 2, 3 and 5 |
 
@@ -277,6 +277,17 @@ unreadable. Built on the user's GO! on all four recommendations as phase 35.1.
 - [x] Every screen inside the app turns dark — lists, dialogs, forms, the till, the charts, the alerts — and the brand colour carries through, lifted so a near-black brand stays visible; a test fails if a screen uses a colour that cannot turn dark (`resources/css/app.css`, `resources/js/lib/charts.js`, `tests/js/appearance.test.js`)
 - [x] **Paper and the sign-in pages stay light**: a document printed from the dark screen prints white, and signing out returns to the light sign-in page at once (`resources/js/lib/appearance.js`)
 
+#### CR-5. Paid and owed to suppliers (27 November 2026) — ✅ Done (5 of 5)
+From the client's meeting: after a purchase request, an order and the
+delivery, they want to see which suppliers were paid in cash and which are
+payables. Built on the user's GO! on all recommendations (a down payment
+allowed, a Cheque method, Admin only) as phase 24.5.
+- [x] How a delivery is paid — in full, part now with the rest on account, or all on account — and with what (Cash, GCash, Maya, Bank transfer, Card, Cheque) and its reference; older deliveries read *method not recorded* (`app/Support/DeliveryPayment.php`, `app/Services/PurchasePoster.php`, `resources/js/Pages/Purchases/Create.vue`, `tests/Feature/Purchases/DeliveryPaymentTest.php`)
+- [x] Payables → **Paid**: per supplier for a period — bought, paid on delivery, paid later, still owed, past due — and by method, each figure opening the list behind it (`SupplierAccount::paidSummary()`, `resources/js/Pages/Payables/Paid.vue`)
+- [x] The Purchases list says *Paid · Cash*, *Owing* or *Overdue*, and filters by it (`PurchaseController`)
+- [x] A purchase order says *Paid · Owed* across its deliveries (`PurchaseOrderController::deliveriesPaid()`)
+- [x] Reports: **Money paid to suppliers** by method, in the spreadsheet too; all of it Admin only (`supplier_payments.view`) (`app/Services/ReportBook.php`)
+
 #### CR-4. Mobilization on a quotation (27 November 2026) — ✅ Done (4 of 4)
 The client's request: a **Mobilization** field above the discount on a
 quotation — the discount takes off the total, mobilization adds to it, both
@@ -332,7 +343,7 @@ count may change once decisions 2 to 5 are answered. Two locations were
 asked for on 19 November 2026 (a delivery is received at the store or the
 warehouse), so phase 31 grew into 31.1 to 31.5.
 
-**Progress: 7 of 9 stages and 22 of 26 phases done** (the client-request phases — 17.1, 18.1, 19.1, 24.1 to 24.4, 28.1 and 35.1 — are built on top and not counted among the 26). Stage 5 was taken ahead of stage 4 (12 November 2026); stage 9's phase 34 ahead of stages 4, 6 and 8 (13 November 2026); stage 8's phase 30 ahead of stages 4 and 6 (20 November 2026).
+**Progress: 7 of 9 stages and 22 of 26 phases done** (the client-request phases — 17.1, 18.1, 19.1, 24.1 to 24.5, 28.1 and 35.1 — are built on top and not counted among the 26). Stage 5 was taken ahead of stage 4 (12 November 2026); stage 9's phase 34 ahead of stages 4, 6 and 8 (13 November 2026); stage 8's phase 30 ahead of stages 4 and 6 (20 November 2026).
 
 | Stage | Phase | Work | Completes | Status |
 |---|---|---|---|---|
@@ -354,6 +365,7 @@ warehouse), so phase 31 grew into 31.1 to 31.5.
 | | 24.2 | Canvass: supplier prices, the Abstract of Quotation, the award per item | CR-1 | ✅ Done |
 | | 24.3 | Orders from the award — one per supplier, at the quoted prices | CR-1 | ✅ Done |
 | | 24.4 | Purchase-order approval; a draft prints marked as not approved | CR-1 | ✅ Done |
+| | 24.5 | Paid and owed to suppliers: how a delivery is paid, a down payment, Payables → Paid (client's meeting, 27 November) | CR-5 | ✅ Done |
 | **6** Pricing rules and approvals | 25 | Retail, wholesale and contractor prices, prices by quantity, effective dates | #11, #7, #5 | ⬜ Not started |
 | | 26 | Supervisor approval of overrides, discounts, refunds, voids and credit sales over the limit; approval limits | | ⬜ Not started |
 | | 27 | Returns — exchange, customer credit, sellable or damaged | | ⬜ Not started |
@@ -381,6 +393,18 @@ the till can scan barcodes sooner.
 
 Newest first. One line for each update.
 
+- **2026-11-28** — **Phase 24.5 built: paid and owed to suppliers** (CR-5,
+  the client's meeting of 27 November), on the user's GO! on all
+  recommendations. A delivery is paid in full, part now with the rest on
+  account, or all on account, naming how (a new **Cheque** method beside the
+  others) and its reference; **Payables → Paid** shows each supplier's
+  bought, paid on delivery, paid later, still owed and past due for a period,
+  and the money by method; the Purchases list has a Payment column and
+  filter, an order says *Paid · Owed*, and Reports a **Money paid to
+  suppliers** block. Admin only, as supplier money was. Two columns and the
+  Cheque method, so a deploy runs `migrate` and needs the new
+  `public/build`; no new permission or setting. CR-5: 5 of 5 boxes; proposal
+  totals unchanged.
 - **2026-11-27** — **Phase 28.1 built: Mobilization** (CR-4, the client's
   request of 27 November), on the user's GO! on all five recommendations. A
   charge for bringing the goods to the site, typed above the discount on a

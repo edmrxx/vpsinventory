@@ -74,7 +74,8 @@ class PaymentMethodTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page
                 ->component('PaymentMethods/Index')
-                ->has('methods.data', 4)
+                // Cash, GCash, Maya, Bank transfer (phase 16) and Cheque (phase 24.5).
+                ->has('methods.data', 5)
                 ->where('methods.data.1.name', 'Cash')
                 ->where('methods.data.1.is_cash', true)
                 // Cash can be neither switched off nor deleted.
@@ -240,8 +241,9 @@ class PaymentMethodTest extends TestCase
         $this->actingAs($admin)
             ->get('/payment-methods')
             ->assertInertia(fn ($page) => $page
-                ->where('methods.data.2.name', 'GCash')
-                ->where('methods.data.2.payments_count', 1)
-                ->where('methods.data.2.can.delete', false));
+                // By name: Bank transfer, Cash, Cheque, GCash, Maya.
+                ->where('methods.data.3.name', 'GCash')
+                ->where('methods.data.3.payments_count', 1)
+                ->where('methods.data.3.can.delete', false));
     }
 }

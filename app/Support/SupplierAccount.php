@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Enums\DocumentStatus;
+use App\Models\PaymentMethod;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use Illuminate\Database\Eloquent\Builder;
@@ -205,6 +206,129 @@ final class SupplierAccount
      *
      * @return list<array{reference:string, balance_due:string, expected:string}>
      */
+    /**
+     * What was paid to suppliers in a period, and what is still owed (phase
+     * 24.5, CR-5) — the Paid side of Payables, and the Reports block.
+     *
+     * Paid on delivery is each posted delivery's bill less what went on
+     * account, dated the day it was delivered; paid later is the money of
+     * posted supplier payments (never the supplier credit they used), dated
+     * the day it was paid. Still owed and overdue are as of `$asOf`, whatever
+     * the period, as on the Owed side. A voided document counts for nothing.
+     * Five grouped queries, whatever the number of suppliers.
+     *
+     * @param  array{supplier_id?:?int, staff_id?:?int}  $filters
+     * @return array{rows: list<array<string, mixed>>, totals: array<string, string>, methods: list<array{name: string, on_delivery: string, later: string, total: string}>}
+     */
+    public static function paidSummary(Carbon $from, Carbon $to, Carbon $asOf, array $filters = []): array
+    {
+        $supplier = $filters['supplier_id'] ?? null;
+        $staff = $filters['staff_id'] ?? null;
+        $between = [$from->copy()->startOfDay(), $to->copy()->endOfDay()];
+
+        $deliveries = fn () => DB::table('purchases')
+            ->where('status', DocumentStatus::Posted->value)
+            ->whereBetween('purchase_date', $between)
+            ->when($supplier, fn ($q) => $q->where('supplier_id', $supplier))
+            ->when($staff, fn ($q) => $q->where('posted_by', $staff));
+
+        $payments = fn () => DB::table('supplier_payments')
+            ->where('status', DocumentStatus::Posted->value)
+            ->whereBetween('payment_date', $between)
+            ->when($supplier, fn ($q) => $q->where('supplier_id', $supplier))
+            ->when($staff, fn ($q) => $q->where('posted_by', $staff));
+
+        $bought = $deliveries()
+            ->groupBy('supplier_id')
+            ->select('supplier_id')
+            ->selectRaw('COALESCE(SUM(ROUND(total_amount * 100)), 0) AS bought')
+            ->selectRaw('COALESCE(SUM(ROUND((total_amount - on_account) * 100)), 0) AS on_delivery')
+            ->get()->keyBy('supplier_id');
+
+        $later = $payments()
+            ->groupBy('supplier_id')
+            ->select('supplier_id')
+            ->selectRaw('COALESCE(SUM(ROUND(amount * 100)), 0) AS later')
+            ->get()->keyBy('supplier_id');
+
+        $today = $asOf->copy()->startOfDay()->toDateString();
+        $owing = self::openBills($asOf, ['supplier_id' => $supplier])
+            ->when($staff, fn ($q) => $q->where('purchases.posted_by', $staff))
+            ->reorder()
+            ->groupBy('purchases.supplier_id')
+            ->select('purchases.supplier_id')
+            ->selectRaw('COALESCE(SUM(ROUND(purchases.balance_due * 100)), 0) AS owed')
+            ->selectRaw('COALESCE(SUM(CASE WHEN COALESCE(purchases.due_date, purchases.purchase_date) < ? THEN ROUND(purchases.balance_due * 100) ELSE 0 END), 0) AS overdue', [$today])
+            ->toBase()->get()->keyBy('supplier_id');
+
+        $ids = collect([$bought->keys(), $later->keys(), $owing->keys()])->flatten()->unique()->values();
+        $names = Supplier::whereIn('id', $ids)->pluck('name', 'id');
+
+        $sum = array_fill_keys(['bought', 'on_delivery', 'later', 'owed', 'overdue'], 0);
+        $rows = [];
+
+        foreach ($ids as $id) {
+            $row = [
+                'bought' => (int) ($bought[$id]->bought ?? 0),
+                'on_delivery' => (int) ($bought[$id]->on_delivery ?? 0),
+                'later' => (int) ($later[$id]->later ?? 0),
+                'owed' => (int) ($owing[$id]->owed ?? 0),
+                'overdue' => (int) ($owing[$id]->overdue ?? 0),
+            ];
+
+            foreach ($row as $key => $cents) {
+                $sum[$key] += $cents;
+            }
+
+            $rows[] = ['supplier_id' => (int) $id, 'supplier' => (string) ($names[$id] ?? '—')]
+                + array_map(fn (int $cents) => self::money($cents), $row)
+                + ['paid' => self::money($row['on_delivery'] + $row['later']), 'sort' => $row['on_delivery'] + $row['later'] + $row['owed']];
+        }
+
+        usort($rows, fn ($a, $b) => [$b['sort'], $a['supplier']] <=> [$a['sort'], $b['supplier']]);
+
+        // How it was paid: on delivery and later, by method. A delivery from
+        // before phase 24.5 names none: "Not recorded".
+        $byMethod = [];
+
+        foreach ([
+            'on_delivery' => $deliveries()->whereColumn('total_amount', '>', 'on_account')
+                ->groupBy('payment_method_id')->select('payment_method_id')
+                ->selectRaw('COALESCE(SUM(ROUND((total_amount - on_account) * 100)), 0) AS cents')->get(),
+            'later' => $payments()->where('amount', '>', 0)
+                ->groupBy('payment_method_id')->select('payment_method_id')
+                ->selectRaw('COALESCE(SUM(ROUND(amount * 100)), 0) AS cents')->get(),
+        ] as $when => $groups) {
+            foreach ($groups as $group) {
+                $key = $group->payment_method_id ?? 0;
+                $byMethod[$key] ??= ['on_delivery' => 0, 'later' => 0];
+                $byMethod[$key][$when] += (int) $group->cents;
+            }
+        }
+
+        $methodNames = PaymentMethod::whereIn('id', array_keys($byMethod))->pluck('name', 'id');
+        $methods = [];
+
+        foreach ($byMethod as $id => $cents) {
+            $methods[] = [
+                'name' => $id === 0 ? 'Not recorded' : (string) ($methodNames[$id] ?? '—'),
+                'on_delivery' => self::money($cents['on_delivery']),
+                'later' => self::money($cents['later']),
+                'total' => self::money($cents['on_delivery'] + $cents['later']),
+                'sort' => $cents['on_delivery'] + $cents['later'],
+            ];
+        }
+
+        usort($methods, fn ($a, $b) => $b['sort'] <=> $a['sort']);
+
+        return [
+            'rows' => array_map(fn (array $row) => collect($row)->except('sort')->all(), $rows),
+            'totals' => array_map(fn (int $cents) => self::money($cents), $sum)
+                + ['paid' => self::money($sum['on_delivery'] + $sum['later'])],
+            'methods' => array_map(fn (array $method) => collect($method)->except('sort')->all(), $methods),
+        ];
+    }
+
     public static function reconcile(): array
     {
         $credited = DB::table('purchase_returns')
@@ -274,6 +398,12 @@ final class SupplierAccount
     }
 
     /** Posted bills with something still owed past their due date. */
+    /** Whole centavos as a money string: 123456 -> "1234.56". */
+    protected static function money(int $cents): string
+    {
+        return number_format($cents / 100, 2, '.', '');
+    }
+
     protected static function pastDue(Carbon $asOf): Builder
     {
         return Purchase::query()

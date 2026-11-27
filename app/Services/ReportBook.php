@@ -8,7 +8,9 @@ use App\Models\Sale;
 use App\Models\User;
 use App\Support\ReportFilters;
 use App\Support\Spreadsheet;
+use App\Support\SupplierAccount;
 use Illuminate\Database\Query\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -65,6 +67,13 @@ class ReportBook
                 : null,
             // Valuation is "right now", not a period, and no filter narrows
             // it, so it is left out while one is set.
+            // The money that went out to suppliers (phase 24.5), by method:
+            // on delivery and later, beside what is still owed — for
+            // somebody who may read supplier payments. Like purchases, left
+            // out while a payment method narrows the sales.
+            'payouts' => $sees['payouts']
+                ? SupplierAccount::paidSummary($filters->from, $filters->to, Carbon::today(), ['staff_id' => $filters->staffId])
+                : null,
             'inventory' => $sees['stock'] && $filters->staffId === null && $filters->paymentMethodId === null
                 ? $this->valuation->summary()
                 : null,
@@ -76,7 +85,7 @@ class ReportBook
      * What this user may read. What a sale cost is its cost of goods, so the
      * profit sits behind the permission that guards it everywhere else.
      *
-     * @return array{sales: bool, purchases: bool, cost: bool, stock: bool, account_payments: bool}
+     * @return array{sales: bool, purchases: bool, cost: bool, stock: bool, account_payments: bool, payouts: bool}
      */
     public function sees(User $user, ReportFilters $filters): array
     {
@@ -88,6 +97,7 @@ class ReportBook
             'cost' => $sales && $user->can('viewCost', Sale::class),
             'stock' => $user->can('stock.view'),
             'account_payments' => $user->can('customer_payments.view'),
+            'payouts' => $user->can('supplier_payments.view') && $filters->coversPurchases(),
         ];
     }
 
@@ -168,6 +178,17 @@ class ReportBook
                 $book->row(['Cost of goods sold', Spreadsheet::money($sales['cost'])])
                     ->row([Spreadsheet::text('Gross profit', Spreadsheet::BOLD), Spreadsheet::money($sales['gross_profit'], true)]);
             }
+        }
+
+        if ($payouts = $blocks['payouts'] ?? null) {
+            $book->blank()->row(['Money paid to suppliers', 'On delivery', 'Later', 'Total'], Spreadsheet::HEADER);
+
+            foreach ($payouts['methods'] as $method) {
+                $book->row([$method['name'], Spreadsheet::money($method['on_delivery']), Spreadsheet::money($method['later']), Spreadsheet::money($method['total'])]);
+            }
+
+            $book->row([Spreadsheet::text('Total paid', Spreadsheet::BOLD), Spreadsheet::money($payouts['totals']['on_delivery'], true), Spreadsheet::money($payouts['totals']['later'], true), Spreadsheet::money($payouts['totals']['paid'], true)])
+                ->row(['Still owed to suppliers, as of today', null, null, Spreadsheet::money($payouts['totals']['owed'])]);
         }
 
         if ($collections = $blocks['collections']) {
