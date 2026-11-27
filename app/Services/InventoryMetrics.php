@@ -360,17 +360,14 @@ class InventoryMetrics
                 ->groupBy('sale_lines.product_id')
                 ->select('sale_lines.product_id')
                 ->selectRaw('SUM(sale_lines.quantity) AS quantity')
-                // The line's share of what the sale actually collected, so
-                // a discounted sale is not counted at its list price.
+                // The line's share of what the sale actually collected for
+                // its goods, so a discounted sale is not counted at its list
+                // price — and a mobilization charge is never a product's.
                 // Multiplied before it is divided, on purpose. SQLite gives
                 // a DECIMAL column integer affinity, so total ÷ subtotal is
                 // 1800 ÷ 2000 = 0 there and 0.9 on MySQL. Doing the division
                 // last gives the same answer on both.
-                ->selectRaw(
-                    'SUM(CASE WHEN sales.subtotal > 0 '
-                        .'THEN sale_lines.line_total * sales.total_amount / sales.subtotal '
-                        .'ELSE sale_lines.line_total END) AS amount'
-                )
+                ->selectRaw('SUM('.self::DISCOUNTED_LINE.') AS amount')
                 ->get()
                 ->keyBy('product_id');
 
@@ -496,6 +493,7 @@ class InventoryMetrics
             ->selectRaw('COUNT(*) AS documents')
             ->selectRaw('COALESCE(SUM(subtotal), 0) AS subtotal')
             ->selectRaw('COALESCE(SUM(discount), 0) AS discount')
+            ->selectRaw('COALESCE(SUM(mobilization), 0) AS mobilization')
             ->selectRaw('COALESCE(SUM(total_amount), 0) AS total')
             ->selectRaw('COALESCE(SUM(total_cost), 0) AS cost')
             ->first();
@@ -516,6 +514,9 @@ class InventoryMetrics
             'documents' => (int) $totals->documents,
             'subtotal' => $this->money((float) $totals->subtotal),
             'discount' => $this->money((float) $totals->discount),
+            // Bringing the goods to the site (phase 28.1): part of net sales,
+            // never of a product's figure below.
+            'mobilization' => $this->money((float) $totals->mobilization),
             'returns' => $this->money((float) $returns->total),
             'return_documents' => (int) $returns->documents,
             'net' => $this->money($net),
@@ -610,14 +611,51 @@ class InventoryMetrics
     /**
      * The sale-line amount, with the document's discount spread across it.
      *
+     * Spread from the goods total — what the sale came to less its
+     * mobilization charge (phase 28.1) — so a product, a category or a top
+     * seller is never credited with bringing the goods to the site.
+     *
      * Multiplied before it is divided, on purpose: SQLite gives a DECIMAL
      * column integer affinity, so `1800 / 2000` is 0 there and 0.9 on
      * MySQL. Dividing last gives the same answer on both.
      */
     protected const DISCOUNTED_LINE =
         'CASE WHEN sales.subtotal > 0 '
-        .'THEN sale_lines.line_total * sales.total_amount / sales.subtotal '
+        .'THEN sale_lines.line_total * (sales.total_amount - sales.mobilization) / sales.subtotal '
         .'ELSE sale_lines.line_total END';
+
+    /**
+     * A sale's mobilization charge spread across its lines (phase 28.1), so
+     * the line-built dashboard figures add up to the whole charge while
+     * nothing narrows them. A sale whose goods came to nothing shares it
+     * evenly; `+ 0.0` keeps SQLite from dividing in whole numbers.
+     */
+    protected const MOBILIZATION_LINE =
+        'CASE WHEN sales.mobilization = 0 THEN 0 '
+        .'WHEN sales.subtotal > 0 THEN sale_lines.line_total * sales.mobilization / sales.subtotal '
+        .'ELSE (sales.mobilization + 0.0) / (SELECT COUNT(*) FROM sale_lines AS each_line WHERE each_line.sale_id = sales.id) END';
+
+    /**
+     * Each line's share of what went on account. Added up, it is the whole
+     * figure — the same sum as before phase 28.1 for every sale. A sale whose
+     * goods came to nothing shares it evenly, as the charge above.
+     */
+    protected const ON_ACCOUNT_LINE =
+        'CASE WHEN sales.subtotal > 0 THEN sale_lines.line_total * sales.on_account / sales.subtotal '
+        .'WHEN sales.on_account > 0 THEN (sales.on_account + 0.0) / (SELECT COUNT(*) FROM sale_lines AS each_line WHERE each_line.sale_id = sales.id) '
+        .'ELSE 0 END';
+
+    /**
+     * The goods' part of what went on account, for a figure narrowed to a
+     * category or a product: the account takes the goods and the charge in
+     * proportion, so a sale of nails all on account cannot leave the nails
+     * owing the charge too. Exactly ON_ACCOUNT_LINE when there is no charge.
+     */
+    protected const ON_ACCOUNT_GOODS_LINE =
+        'CASE WHEN sales.mobilization > 0 AND sales.total_amount > 0 AND sales.subtotal > 0 '
+        .'THEN sale_lines.line_total * sales.on_account * (sales.total_amount - sales.mobilization) / (sales.subtotal * sales.total_amount) '
+        .'WHEN sales.mobilization > 0 THEN 0 '
+        .'ELSE '.'CASE WHEN sales.subtotal > 0 THEN sale_lines.line_total * sales.on_account / sales.subtotal ELSE 0 END END';
 
     /**
      * Turn what went out and what came back into one net breakdown.
@@ -937,16 +975,24 @@ class InventoryMetrics
      */
     public function periodFigures(Carbon $from, Carbon $to, array $filters = []): array
     {
+        // A mobilization charge (phase 28.1) belongs to the whole sale, not
+        // to a product: counted while nothing narrows the figures, left out
+        // when a category or a product does — as Collections falls back.
+        $narrowed = ($filters['category_id'] ?? null) || ($filters['product_id'] ?? null);
+
         $sold = $this->saleLines($from, $to, $filters)
-            ->selectRaw('COALESCE(SUM('.self::DISCOUNTED_LINE.'), 0) AS amount')
+            ->selectRaw('COALESCE(SUM('.self::DISCOUNTED_LINE.'), 0) AS goods')
+            ->selectRaw($narrowed ? '0 AS mobilization' : 'COALESCE(SUM('.self::MOBILIZATION_LINE.'), 0) AS mobilization')
             ->selectRaw('COALESCE(SUM(sale_lines.line_cost), 0) AS cost')
             ->selectRaw('COALESCE(SUM(sale_lines.quantity), 0) AS quantity')
             ->selectRaw('COUNT(DISTINCT sales.id) AS documents')
             // Each line's share of what went on account, so the Category and
             // Product filters can narrow it. Added up it is the whole figure.
             // Multiplied before it is divided: see the note in CLAUDE.md.
-            ->selectRaw('COALESCE(SUM(CASE WHEN sales.subtotal > 0 THEN sale_lines.line_total * sales.on_account / sales.subtotal ELSE 0 END), 0) AS on_account')
+            ->selectRaw('COALESCE(SUM('.($narrowed ? self::ON_ACCOUNT_GOODS_LINE : self::ON_ACCOUNT_LINE).'), 0) AS on_account')
             ->first();
+
+        $sold->amount = (float) $sold->goods + (float) $sold->mobilization;
 
         $returned = $this->saleReturnLines($from, $to, $filters)
             ->selectRaw('COALESCE(SUM(sales_return_lines.line_refund), 0) AS amount')
@@ -978,6 +1024,7 @@ class InventoryMetrics
 
         return [
             'sales_gross' => (float) $sold->amount,
+            'mobilization' => (float) $sold->mobilization,
             'net_sales' => $netSales,
             'cogs' => $cogs,
             'gross_profit' => $netSales - $cogs,

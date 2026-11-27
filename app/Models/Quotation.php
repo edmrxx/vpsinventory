@@ -25,7 +25,7 @@ class Quotation extends Model
 
     protected $fillable = [
         'reference', 'customer_id', 'attention', 'quote_date', 'valid_until',
-        'status', 'subtotal', 'discount', 'total_amount', 'notes',
+        'status', 'subtotal', 'discount', 'mobilization', 'total_amount', 'notes',
         'idempotency_key', 'prepared_by',
     ];
 
@@ -37,6 +37,7 @@ class Quotation extends Model
             'valid_until' => 'date',
             'subtotal' => 'decimal:2',
             'discount' => 'decimal:2',
+            'mobilization' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'accepted_at' => 'datetime',
             'cancelled_at' => 'datetime',

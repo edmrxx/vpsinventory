@@ -23,7 +23,7 @@ class SalesOrder extends Model
 
     protected $fillable = [
         'reference', 'location_id', 'customer_id', 'attention', 'order_date', 'reserve_until',
-        'status', 'subtotal', 'discount', 'total_amount', 'notes',
+        'status', 'subtotal', 'discount', 'mobilization', 'total_amount', 'notes',
         'idempotency_key', 'created_by', 'quotation_id',
     ];
 
@@ -35,6 +35,7 @@ class SalesOrder extends Model
             'reserve_until' => 'date',
             'subtotal' => 'decimal:2',
             'discount' => 'decimal:2',
+            'mobilization' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'approved_at' => 'datetime',
             'fulfilled_at' => 'datetime',

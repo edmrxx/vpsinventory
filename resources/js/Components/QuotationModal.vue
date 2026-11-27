@@ -89,6 +89,10 @@ const { money } = useMoney()
                 </section>
 
                 <div class="ml-auto w-full space-y-1 sm:max-w-xs">
+                    <div v-if="Number(data.quotation.mobilization) > 0" class="flex items-baseline justify-between gap-3 text-xs text-ink-muted">
+                        <span>Mobilization</span>
+                        <span class="tabular-nums">+{{ money(data.quotation.mobilization) }}</span>
+                    </div>
                     <div v-if="Number(data.quotation.discount) > 0" class="flex items-baseline justify-between gap-3 text-xs text-ink-muted">
                         <span>Discount</span>
                         <span class="tabular-nums">−{{ money(data.quotation.discount) }}</span>

@@ -91,6 +91,8 @@ class DocumentResource extends JsonResource
             'lines_count' => $this->whenCounted('lines'),
             'subtotal' => $this->subtotal ?? null,
             'discount' => $this->discount ?? null,
+            // Phase 28.1: on a quotation, sales order or sale only.
+            'mobilization' => $this->mobilization ?? null,
             'total_amount' => $this->total_amount ?? null,
             'vat_rate' => $vatable ? Vat::rateLabel($rate) : null,
             'net_amount' => $vatable ? Vat::net($gross, $rate) : null,

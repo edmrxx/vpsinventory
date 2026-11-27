@@ -39,6 +39,9 @@ const narrow = computed(() => String(slip.value.width) === '58')
 const vatable = computed(() => Number(props.sale.vat_rate ?? 0) > 0)
 const voided = computed(() => props.sale.status === 'voided')
 const discounted = computed(() => Number(props.sale.discount ?? 0) > 0)
+// Bringing the goods to the site (phase 28.1). The till never adds one; a
+// sale from the sale form may.
+const mobilized = computed(() => Number(props.sale.mobilization ?? 0) > 0)
 const change = computed(() => Number(props.sale.change ?? 0))
 
 /** As rung up: 2 box, not the 200 pcs it became on the shelf. */
@@ -87,7 +90,8 @@ function asSold(line) {
         <hr />
 
         <dl class="totals">
-            <div v-if="discounted"><dt>Subtotal</dt><dd>{{ money(sale.subtotal) }}</dd></div>
+            <div v-if="discounted || mobilized"><dt>Subtotal</dt><dd>{{ money(sale.subtotal) }}</dd></div>
+            <div v-if="mobilized"><dt>Mobilization</dt><dd>+{{ money(sale.mobilization) }}</dd></div>
             <div v-if="discounted"><dt>Discount</dt><dd>-{{ money(sale.discount) }}</dd></div>
             <div class="strong big"><dt>TOTAL</dt><dd>{{ money(sale.total_amount) }}</dd></div>
             <template v-if="vatable">

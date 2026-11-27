@@ -7,8 +7,8 @@ system as it really runs.
 Type **`UPDATE CHECKLIST!`** to have it checked against the code again and
 reported. The rule for doing that is in `CLAUDE.md`, under "Scope checklist".
 
-- **Last checked:** 2026-11-26
-- **Test suite on that day:** 1,316 PHP tests and 235 front-end tests pass
+- **Last checked:** 2026-11-27
+- **Test suite on that day:** 1,328 PHP tests and 239 front-end tests pass
 - **Client copy:** a PDF was made on 2026-11-08 at
   `~/Desktop/go enterprise scope.pdf`; it is no longer there, and it is not
   rebuilt automatically
@@ -19,8 +19,8 @@ reported. The rule for doing that is in `CLAUDE.md`, under "Scope checklist".
 
 | | |
 |---|---|
-| **Current stage** | Stage 8 — locations, counts, losses: ✅ **done** (all 8 phases: 30, 31.1 to 31.5, 32 and 33), taken ahead of stages 4 and 6 on 20 November 2026. Stages 1, 2, 3, 5, 7, 8 and 9 and CR-1, CR-2 and CR-3 ✅ done; stage 5 still has one box open — pending purchase quantities on the Stock screen (#12). Stages 4 and 6 are left |
-| **Current phase** | Phase 35.1 ✅ done (**a light or a dark screen**, CR-3, each person's own choice). Before it, phase 33 ✅ done (**loss reports**: damaged, expired, rusted, stolen or missing goods reported with photos, held aside at their location, written off only when an approver approves — or rejected, freeing the goods) |
+| **Current stage** | Stage 8 — locations, counts, losses: ✅ **done** (all 8 phases: 30, 31.1 to 31.5, 32 and 33), taken ahead of stages 4 and 6 on 20 November 2026. Stages 1, 2, 3, 5, 7, 8 and 9 and CR-1 to CR-4 ✅ done; stage 5 still has one box open — pending purchase quantities on the Stock screen (#12). Stages 4 and 6 are left |
+| **Current phase** | Phase 28.1 ✅ done (**Mobilization**, CR-4: a charge for bringing the goods to the site on a quotation, carried to the order and the sale). Before it, phase 35.1 ✅ done (**a light or a dark screen**, CR-3). Before that, phase 33 ✅ done (**loss reports**: damaged, expired, rusted, stolen or missing goods reported with photos, held aside at their location, written off only when an approver approves — or rejected, freeing the goods) |
 | **Waiting on** | **GO!** for the next stage — stage 4 (cashier shifts) or stage 6 (pricing rules and approvals). Decision 4 still has two questions open, each answered for now by a default: whether the till may ever sell from a warehouse (*a store only*, 31.4), and who may transfer and whether a transfer needs approval (*Staff may, no approval*, 31.5). Decision 2 still waits for stage 6 |
 | **Next stage** | Stage 4 (phase 20) or stage 6 (phases 25 to 27), in the order the user picks; stage 6 waits on decisions 2, 3 and 5 |
 
@@ -277,6 +277,18 @@ unreadable. Built on the user's GO! on all four recommendations as phase 35.1.
 - [x] Every screen inside the app turns dark — lists, dialogs, forms, the till, the charts, the alerts — and the brand colour carries through, lifted so a near-black brand stays visible; a test fails if a screen uses a colour that cannot turn dark (`resources/css/app.css`, `resources/js/lib/charts.js`, `tests/js/appearance.test.js`)
 - [x] **Paper and the sign-in pages stay light**: a document printed from the dark screen prints white, and signing out returns to the light sign-in page at once (`resources/js/lib/appearance.js`)
 
+#### CR-4. Mobilization on a quotation (27 November 2026) — ✅ Done (4 of 4)
+The client's request: a **Mobilization** field above the discount on a
+quotation — the discount takes off the total, mobilization adds to it, both
+worked out as typed. Read as a charge for bringing the goods to the site (a
+service: no stock, no cost) that the customer must also pay when the
+quotation becomes a sale. Built on the user's GO! on all five
+recommendations as phase 28.1.
+- [x] Mobilization on the quotation form, above Discount, worked out as typed: total = subtotal − discount + mobilization, never discounted, VAT-inclusive, never negative; on the printed quotation and its dialog (`app/Support/SaleTotals.php`, `resources/js/lib/money.js`, `resources/js/Pages/Quotations/`, `tests/Feature/Sales/MobilizationTest.php`)
+- [x] Carried to the sales order and the sale — *Make a sale*, *Make an order*, a sale from an order and *Quote again* start on it; the sale is paid in full with it, cash, split or on account; on the sale and order pages, their dialogs and the slip (`SaleController`, `SalesOrderController`, `QuotationController`, `resources/js/Components/SaleSlip.vue`)
+- [x] Never refunded by a return — the refund is spread over the goods only, so a fully returned sale on account still owes the charge; `inventory:verify` stays clean (`SalesReturnPoster::proratedLineTotal()`, `Sale::goodsTotal()`)
+- [x] Counted in net sales and gross profit, with its own *Mobilization charged* line on Reports and a column in the spreadsheet; left out of products, categories, top sellers and the dashboard while narrowed to a category or a product; the till has none and a pending payment may not add one (`app/Services/InventoryMetrics.php`, `app/Services/ReportBook.php`, `tests/Feature/Sales/PendingPaymentTest.php`)
+
 ---
 
 ## 2. Acceptance checks (proposal section 10)
@@ -320,7 +332,7 @@ count may change once decisions 2 to 5 are answered. Two locations were
 asked for on 19 November 2026 (a delivery is received at the store or the
 warehouse), so phase 31 grew into 31.1 to 31.5.
 
-**Progress: 7 of 9 stages and 22 of 26 phases done.** Stage 5 was taken ahead of stage 4 (12 November 2026); stage 9's phase 34 ahead of stages 4, 6 and 8 (13 November 2026); stage 8's phase 30 ahead of stages 4 and 6 (20 November 2026).
+**Progress: 7 of 9 stages and 22 of 26 phases done** (the client-request phases — 17.1, 18.1, 19.1, 24.1 to 24.4, 28.1 and 35.1 — are built on top and not counted among the 26). Stage 5 was taken ahead of stage 4 (12 November 2026); stage 9's phase 34 ahead of stages 4, 6 and 8 (13 November 2026); stage 8's phase 30 ahead of stages 4 and 6 (20 November 2026).
 
 | Stage | Phase | Work | Completes | Status |
 |---|---|---|---|---|
@@ -347,6 +359,7 @@ warehouse), so phase 31 grew into 31.1 to 31.5.
 | | 27 | Returns — exchange, customer credit, sellable or damaged | | ⬜ Not started |
 | **7** Quotations and sales orders | 28 | Quotations | #4, reserved part of #12 | ✅ Done |
 | | 29 | Sales orders with reserved stock; reserved and available quantities | | ✅ Done |
+| | 28.1 | Mobilization on a quotation, carried to the order and the sale (client's request, 27 November) | CR-4 | ✅ Done |
 | **8** Locations, counts, losses | 30 | Product brand, model, barcode, preferred supplier | #8, #12, #13, #14, #15 | ✅ Done |
 | | 31.1 | Locations: the list of stores and warehouses (Masters → Locations) | #24 (locations) | ✅ Done |
 | | 31.2 | Stock per location: the ledger, the batches and on hand count each place; the stock on the books goes to one starting location | #12 (by location) | ✅ Done |
@@ -368,6 +381,38 @@ the till can scan barcodes sooner.
 
 Newest first. One line for each update.
 
+- **2026-11-27** — **Phase 28.1 built: Mobilization** (CR-4, the client's
+  request of 27 November), on the user's GO! on all five recommendations. A
+  charge for bringing the goods to the site, typed above the discount on a
+  quotation, a sales order and a sale: total = subtotal − discount +
+  mobilization, never discounted; carried from a quotation to the order and
+  the sale (and by *Quote again*); never refunded by a return; in net sales
+  and gross profit, with its own Reports line and spreadsheet column, and
+  left out of every goods figure. The till has none. A new column on three
+  tables, so a deploy runs `migrate` and needs the new `public/build`; no new
+  permission or setting. CR-4: 4 of 4 boxes; proposal totals unchanged.
+  1,328 PHP and 239 front-end tests pass; `inventory:verify` clean, and a
+  sale with the charge tried on the MariaDB books inside a rolled-back
+  transaction. The flaky test noted on 23 November is
+  `ProductPhotoTest` (*a large photograph is shrunk*): it failed in two full
+  runs of three and passes every time on its own, with or without this
+  phase — not yet fixed.
+- **2026-11-26** — Checked again (`UPDATE CHECKLIST!`). Since the last check
+  (23 November): phase 17.1 (CR-2), phase 18.1, lists that remember where you
+  were, and phase 35.1 (CR-3, the light or dark screen, its switch moved into
+  the top bar in place of the search box that searched nothing) were built;
+  besides them, GO tab icons in place of a template's handshake, PHP's
+  `bcmath`, `gd`, `zip` and `xmlwriter` required in `composer.json` (the VPS
+  lacked `bcmath`, and every Sales screen answered 500), and the navy
+  DeltaTech symbol on every light background — all committed, merged into
+  `main` and pushed (`6fbe51c`). All 22 open boxes checked against the code —
+  none is built yet (no shift, no price list, no approval limit, no return
+  approval, exchange or damaged return, no pending purchase quantities on
+  the Stock screen). No box changes; no client decision given. 1,316 PHP and
+  235 front-end tests pass; `inventory:verify` clean on all five checks.
+  Totals stay 15 / 7 / 2; 7 of 9 checks; 7 of 9 stages, 22 of 26 phases (the
+  client-request phases 17.1, 18.1, 19.1, 24.1–24.4 and 35.1 are not counted
+  among the 26). Next: stage 4 or 6, on GO!.
 - **2026-11-26** — **Phase 35.1 built: a light or a dark screen** (CR-3, the
   client's request of 26 November), on the user's GO! on all four
   recommendations: each person picks Light, Dark or Same as my device from

@@ -168,6 +168,12 @@ function printQuotation() {
                         <td colspan="3" class="hidden pt-3 pr-3 text-right text-xs text-ink-muted sm:table-cell print:table-cell">Subtotal</td>
                         <td class="pt-3 text-right tabular-nums text-ink-muted">{{ money(quotation.subtotal) }}</td>
                     </tr>
+                    <!-- Bringing the goods to the site (phase 28.1), added to the total. -->
+                    <tr v-if="Number(quotation.mobilization) > 0">
+                        <td colspan="2" class="pr-3 text-xs text-ink-muted sm:hidden print:hidden">Mobilization</td>
+                        <td colspan="3" class="hidden pr-3 text-right text-xs text-ink-muted sm:table-cell print:table-cell">Mobilization</td>
+                        <td class="text-right tabular-nums text-ink-muted">+{{ money(quotation.mobilization) }}</td>
+                    </tr>
                     <tr v-if="Number(quotation.discount) > 0">
                         <td colspan="2" class="pr-3 text-xs text-ink-muted sm:hidden print:hidden">Discount</td>
                         <td colspan="3" class="hidden pr-3 text-right text-xs text-ink-muted sm:table-cell print:table-cell">Discount</td>

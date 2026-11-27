@@ -91,9 +91,20 @@ const done = { onDone: () => emit('close'), today }
                     </div>
                 </section>
 
-                <div class="ml-auto flex w-full items-baseline justify-between gap-3 sm:max-w-xs">
-                    <span class="text-sm font-semibold text-ink">Total</span>
-                    <span class="tabular-nums text-base font-bold text-ink">{{ money(data.order.total_amount) }}</span>
+                <div class="ml-auto w-full space-y-1 sm:max-w-xs">
+                    <!-- What makes the total differ from the lines (phase 28.1). -->
+                    <div v-if="Number(data.order.mobilization) > 0" class="flex items-baseline justify-between gap-3 text-xs text-ink-muted">
+                        <span>Mobilization</span>
+                        <span class="tabular-nums">+{{ money(data.order.mobilization) }}</span>
+                    </div>
+                    <div v-if="Number(data.order.discount) > 0" class="flex items-baseline justify-between gap-3 text-xs text-ink-muted">
+                        <span>Discount</span>
+                        <span class="tabular-nums">−{{ money(data.order.discount) }}</span>
+                    </div>
+                    <div class="flex items-baseline justify-between gap-3">
+                        <span class="text-sm font-semibold text-ink">Total</span>
+                        <span class="tabular-nums text-base font-bold text-ink">{{ money(data.order.total_amount) }}</span>
+                    </div>
                 </div>
 
                 <div v-if="data.can?.cancel || data.can?.approve || data.can?.sell" class="flex flex-wrap justify-end gap-2 border-t border-line pt-4">

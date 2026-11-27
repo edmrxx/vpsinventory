@@ -123,6 +123,11 @@ async function submit() {
                     and only the rest is handed back as cash.
                 </p>
 
+                <p v-if="Number(sale.mobilization) > 0" class="mt-4 text-xs text-ink-subtle">
+                    This sale included {{ money(sale.mobilization) }} mobilization. A return gives back goods
+                    only, so that charge is not refunded.
+                </p>
+
                 <p v-if="Number(sale.discount) > 0" class="mt-4 text-xs text-ink-subtle">
                     This sale had {{ money(sale.discount) }} taken off, so a refund is worked out on
                     what was actually charged, not on the list price.

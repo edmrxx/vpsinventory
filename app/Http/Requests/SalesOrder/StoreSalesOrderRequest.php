@@ -48,6 +48,8 @@ class StoreSalesOrderRequest extends FormRequest
             // The quotation it comes from, if any.
             'quotation_id' => ['nullable', 'integer', 'exists:quotations,id'],
             'discount' => ['nullable', 'numeric', 'min:0', 'max:999999999999.99'],
+            // Phase 28.1: bringing the goods to the site, added after the discount.
+            'mobilization' => ['nullable', 'numeric', 'min:0', 'max:999999999999.99'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'idempotency_key' => ['nullable', 'uuid'],
 
@@ -131,7 +133,8 @@ class StoreSalesOrderRequest extends FormRequest
         $sameHeader = (int) $this->input('customer_id') === (int) $order->customer_id
             && (int) ($this->has('location_id') ? $this->integer('location_id') : Location::default()?->id) === (int) $order->location_id
             && (string) $this->input('reserve_until') === $order->reserve_until?->toDateString()
-            && Quantity::centavos(round((float) $this->input('discount', 0), 2)) === Quantity::centavos((float) $order->discount);
+            && Quantity::centavos(round((float) $this->input('discount', 0), 2)) === Quantity::centavos((float) $order->discount)
+            && Quantity::centavos(round((float) $this->input('mobilization', 0), 2)) === Quantity::centavos((float) $order->mobilization);
 
         if (! $sameHeader) {
             return false;
@@ -170,6 +173,7 @@ class StoreSalesOrderRequest extends FormRequest
             'attention' => $this->filled('attention') ? trim((string) $this->input('attention')) : null,
             'notes' => $this->filled('notes') ? trim((string) $this->input('notes')) : null,
             'discount' => $this->filled('discount') ? $this->input('discount') : 0,
+            'mobilization' => $this->filled('mobilization') ? $this->input('mobilization') : 0,
         ]);
     }
 }

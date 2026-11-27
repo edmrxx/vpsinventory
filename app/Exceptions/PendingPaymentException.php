@@ -34,6 +34,12 @@ class PendingPaymentException extends RuntimeException
         return new self("Pending payment [{$reference}] is paid at {$place}, where its goods are held.");
     }
 
+    /** The till sends no mobilization charge (phase 28.1), so its sale adds none. */
+    public static function noMobilization(string $reference): self
+    {
+        return new self("Pending payment [{$reference}] has no mobilization charge. It is paid exactly as it was sent.");
+    }
+
     public static function linesChanged(string $reference): self
     {
         return new self("The items or prices differ from pending payment [{$reference}]. It is paid exactly as it was sent; cancel it to change anything.");

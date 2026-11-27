@@ -37,6 +37,8 @@ class StoreQuotationRequest extends FormRequest
             'attention' => ['nullable', 'string', 'max:160'],
             'valid_until' => ['required', 'date_format:Y-m-d', 'after_or_equal:'.Carbon::today()->toDateString()],
             'discount' => ['nullable', 'numeric', 'min:0', 'max:999999999999.99'],
+            // Phase 28.1: bringing the goods to the site, added after the discount.
+            'mobilization' => ['nullable', 'numeric', 'min:0', 'max:999999999999.99'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'idempotency_key' => ['nullable', 'uuid'],
 
@@ -102,7 +104,8 @@ class StoreQuotationRequest extends FormRequest
     {
         $sameHeader = (int) $this->input('customer_id') === (int) $quotation->customer_id
             && (string) $this->input('valid_until') === $quotation->valid_until?->toDateString()
-            && Quantity::centavos(round((float) $this->input('discount', 0), 2)) === Quantity::centavos((float) $quotation->discount);
+            && Quantity::centavos(round((float) $this->input('discount', 0), 2)) === Quantity::centavos((float) $quotation->discount)
+            && Quantity::centavos(round((float) $this->input('mobilization', 0), 2)) === Quantity::centavos((float) $quotation->mobilization);
 
         if (! $sameHeader) {
             return false;
@@ -141,6 +144,7 @@ class StoreQuotationRequest extends FormRequest
             'attention' => $this->filled('attention') ? trim((string) $this->input('attention')) : null,
             'notes' => $this->filled('notes') ? trim((string) $this->input('notes')) : null,
             'discount' => $this->filled('discount') ? $this->input('discount') : 0,
+            'mobilization' => $this->filled('mobilization') ? $this->input('mobilization') : 0,
         ]);
     }
 }

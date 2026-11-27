@@ -251,16 +251,20 @@ class SalesReturnPoster
     }
 
     /**
-     * One line's share of what the sale actually collected.
+     * One line's share of what the sale actually collected for its goods.
      *
      * The shares are worked out for the whole document at once, in line
      * order, and the last line absorbs the rounding. That way the lines add
-     * up to the total exactly, however awkward the discount.
+     * up to the goods total exactly, however awkward the discount.
+     *
+     * The goods total, never the whole total: a mobilization charge (phase
+     * 28.1) paid for bringing the goods to the site, and is not refunded
+     * when some of them come back.
      */
     protected function proratedLineTotal(Sale $sale, SaleLine $saleLine): float
     {
         $subtotal = (float) $sale->subtotal;
-        $total = (float) $sale->total_amount;
+        $total = (float) $sale->goodsTotal();
 
         if ($subtotal <= 0 || $subtotal === $total) {
             return (float) $saleLine->line_total;

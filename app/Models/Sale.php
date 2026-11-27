@@ -25,7 +25,7 @@ class Sale extends Model
 
     protected $fillable = [
         'reference', 'location_id', 'customer_id', 'sale_date', 'status',
-        'subtotal', 'discount', 'total_amount', 'total_cost',
+        'subtotal', 'discount', 'mobilization', 'total_amount', 'total_cost',
         'on_account', 'balance_due', 'due_date', 'terms_days',
         'notes', 'idempotency_key', 'posted_at', 'posted_by',
     ];
@@ -37,6 +37,7 @@ class Sale extends Model
             'sale_date' => 'date',
             'subtotal' => 'decimal:2',
             'discount' => 'decimal:2',
+            'mobilization' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'total_cost' => 'decimal:2',
             'on_account' => 'decimal:2',
@@ -166,7 +167,20 @@ class Sale extends Model
         );
     }
 
-    /** What this sale earned: what was charged, less what the goods cost. */
+    /**
+     * What the goods came to after the discount: the total without the
+     * mobilization charge (phase 28.1). What a return refunds from — the
+     * charge is never refunded — and what a goods figure reads.
+     */
+    public function goodsTotal(): string
+    {
+        return bcsub((string) $this->total_amount, (string) $this->mobilization, 2);
+    }
+
+    /**
+     * What this sale earned: what was charged, less what the goods cost. A
+     * mobilization charge has no cost, so all of it is profit.
+     */
     public function grossProfit(): string
     {
         return bcsub((string) $this->total_amount, (string) $this->total_cost, 2);

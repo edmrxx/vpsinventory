@@ -193,6 +193,11 @@ function printReport() {
                         <dt class="text-xs text-ink-muted">Discounts given</dt>
                         <dd class="tabular-nums text-sm text-ink">−{{ money(sales.discount) }}</dd>
                     </div>
+                    <!-- Bringing the goods to the site (phase 28.1): part of net sales. -->
+                    <div v-if="Number(sales.mobilization) > 0" class="flex items-center justify-between px-5 py-2.5">
+                        <dt class="text-xs text-ink-muted">Mobilization charged</dt>
+                        <dd class="tabular-nums text-sm text-ink">+{{ money(sales.mobilization) }}</dd>
+                    </div>
                     <div class="flex items-center justify-between px-5 py-2.5">
                         <dt class="text-xs text-ink-muted">
                             Returned ({{ sales.return_documents }} documents)

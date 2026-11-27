@@ -160,3 +160,17 @@ export function lineCentavos(price, quantity) {
 
     return sign * Math.floor((2 * Math.abs(product) + SCALE) / (2 * SCALE))
 }
+
+/**
+ * What a selling document comes to, in pesos (phase 28.1): the goods, less
+ * the discount — never more than the goods — plus the mobilization charge,
+ * which is never discounted. The same sum as `SaleTotals::of()` on the
+ * server, in whole centavos, so the form shows the total the server stores.
+ */
+export function documentTotal(subtotal, discount, mobilization = 0) {
+    const goods = Math.round(Number(subtotal ?? 0) * 100)
+    const off = Math.min(Math.max(Math.round(Number(discount ?? 0) * 100) || 0, 0), Math.max(goods, 0))
+    const charge = Math.max(Math.round(Number(mobilization ?? 0) * 100) || 0, 0)
+
+    return (goods - off + charge) / 100
+}

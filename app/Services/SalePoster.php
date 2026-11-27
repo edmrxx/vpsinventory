@@ -65,7 +65,7 @@ class SalePoster
      * balance due, and falls due after the days agreed on this sale
      * (`terms_days`, phase 18.1), the customer's usual terms when none.
      *
-     * @param  array{customer_id:int,sale_date:string|Carbon,discount?:float|string|null,on_account?:float|string|null,terms_days?:int|string|null,pending_payment_id?:int|null,notes?:string|null,idempotency_key?:string|null,payments?:list<array{payment_method_id:int,amount:float|string,reference?:string|null}>|null}  $header
+     * @param  array{customer_id:int,sale_date:string|Carbon,discount?:float|string|null,mobilization?:float|string|null,on_account?:float|string|null,terms_days?:int|string|null,pending_payment_id?:int|null,notes?:string|null,idempotency_key?:string|null,payments?:list<array{payment_method_id:int,amount:float|string,reference?:string|null}>|null}  $header
      * @param  list<array{product_id:int,unit_id?:int|null,quantity:int|float|string,unit_price:float|string}>  $lines
      */
     public function post(array $header, array $lines): Sale
@@ -96,6 +96,12 @@ class SalePoster
                     $header['discount'] ?? 0,
                 )
                 : null;
+
+            // The till has no mobilization charge (phase 28.1), so a sale
+            // paying what it sent adds none.
+            if ($pending && Quantity::centavos(round((float) ($header['mobilization'] ?? 0), 2)) > 0) {
+                throw PendingPaymentException::noMobilization($pending->reference);
+            }
 
             // A sale made from a quotation (phase 28) locks the quotation
             // first and asks again that it is open, within its date and for
@@ -133,7 +139,7 @@ class SalePoster
 
             // Each line to the centavo first, in whole centavos, so the
             // subtotal is exactly the sum of the lines it prints.
-            $totals = SaleTotals::of($lines, $header['discount'] ?? 0);
+            $totals = SaleTotals::of($lines, $header['discount'] ?? 0, $header['mobilization'] ?? 0);
 
             $paid = PaymentSettlement::settleSale($totals['total'], $onAccount, $header['payments'] ?? null);
 
@@ -149,6 +155,7 @@ class SalePoster
                 'status' => DocumentStatus::Posted,
                 'subtotal' => $totals['subtotal'] / 100,
                 'discount' => $totals['discount'] / 100,
+                'mobilization' => $totals['mobilization'] / 100,
                 'total_amount' => $totals['total'] / 100,
                 'total_cost' => 0,
                 'on_account' => $onAccount / 100,
