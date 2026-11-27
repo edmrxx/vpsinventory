@@ -185,6 +185,10 @@ function totalsOf(doc) {
     if (path.value === 'sales') {
         return [
             { label: 'Subtotal', value: doc.subtotal },
+            // Bringing the goods to the site (phase 28.1), added to the total.
+            ...(Number(doc.mobilization) > 0
+                ? [{ label: 'Mobilization', value: `+${money(doc.mobilization)}`, raw: true }]
+                : []),
             ...(Number(doc.discount) > 0
                 ? [{ label: 'Discount', value: `−${money(doc.discount)}`, raw: true }]
                 : []),

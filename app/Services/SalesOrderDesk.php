@@ -61,7 +61,7 @@ class SalesOrderDesk
                 : null;
 
             $priced = $this->price($lines);
-            $totals = SaleTotals::of($lines, $header['discount'] ?? 0);
+            $totals = SaleTotals::of($lines, $header['discount'] ?? 0, $header['mobilization'] ?? 0);
 
             // Where it holds its stock (phase 31.4), read with a shared lock
             // before the number, as a sale reads where it sells from.
@@ -79,6 +79,7 @@ class SalesOrderDesk
                 'status' => SalesOrderStatus::Pending,
                 'subtotal' => $totals['subtotal'] / 100,
                 'discount' => $totals['discount'] / 100,
+                'mobilization' => $totals['mobilization'] / 100,
                 'total_amount' => $totals['total'] / 100,
                 'notes' => $header['notes'] ?? null,
                 'idempotency_key' => $header['idempotency_key'] ?? null,

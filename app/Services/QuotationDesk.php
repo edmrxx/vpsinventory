@@ -47,7 +47,7 @@ class QuotationDesk
 
         return DB::transaction(function () use ($header, $lines, $today, $by) {
             $priced = $this->price($lines);
-            $totals = SaleTotals::of($lines, $header['discount'] ?? 0);
+            $totals = SaleTotals::of($lines, $header['discount'] ?? 0, $header['mobilization'] ?? 0);
             $reference = $this->numbers->next('documents.quotation_prefix', $today);
 
             $quotation = new Quotation([
@@ -59,6 +59,7 @@ class QuotationDesk
                 'status' => QuotationStatus::Open,
                 'subtotal' => $totals['subtotal'] / 100,
                 'discount' => $totals['discount'] / 100,
+                'mobilization' => $totals['mobilization'] / 100,
                 'total_amount' => $totals['total'] / 100,
                 'notes' => $header['notes'] ?? null,
                 'idempotency_key' => $header['idempotency_key'] ?? null,

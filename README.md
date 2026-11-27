@@ -1849,6 +1849,44 @@ The rules:
   an official receipt or an invoice*. A customer, product or unit named on a
   quotation cannot be deleted; `data:reset` wipes both tables.
 
+### Mobilization (phase 28.1, CR-4)
+
+The client's request of 27 November 2026: a **Mobilization** charge — what
+bringing the goods, the people or the equipment to the customer's site costs
+— on a quotation, carried to the sales order and the sale. A service, not
+goods: no stock, no cost.
+
+```
+Subtotal (the goods)     2,500.00
+Mobilization            +  500.00
+Discount                −  100.00
+Total                    2,900.00   = subtotal − discount + mobilization
+```
+
+- **One sum, everywhere**: `SaleTotals::of($lines, $discount, $mobilization)`
+  on the server, `documentTotal()` in `lib/money.js` on the forms. The
+  discount never takes more than the goods, so the charge is never
+  discounted. Typed **VAT-inclusive** like every amount; the VAT is split
+  from the whole total. `subtotal` stays the goods alone; `Sale::goodsTotal()`
+  is the total less the charge.
+- **Carried** from a quotation to *Make a sale*, *Make an order*, a sale from
+  an order and *Quote again* (unlike the discount, which *Quote again* leaves
+  behind). Paid with the rest of the sale, on account too.
+- **Never refunded**: a sales return spreads its refund over the goods total.
+  A sale all on account and fully returned still owes the charge.
+- **Figures**: in net sales, gross profit (no cost, all of it profit), the
+  monthly chart, sales by customer and Money received; its own line on
+  Reports, *Mobilization charged*, and a column in the spreadsheet. **Left out
+  of every goods figure** — sales by product and category, top sellers — and
+  of the dashboard while it is narrowed to a category or a product. The
+  dashboard builds its figures from lines, so the charge is spread across
+  each sale's lines in the same query (no new query); unnarrowed it equals
+  Reports.
+- **The till has none**, and a sale paying a pending payment may not add one
+  (refused by the request and by `SalePoster`). Anyone who may make the
+  quotation, order or sale may enter it; no limit, no approval, never
+  negative. Deploy: `migrate` and the new `public/build`.
+
 ### Sales orders and reserved stock
 
 Phase 29, the second and last of stage 7. A customer's order that holds

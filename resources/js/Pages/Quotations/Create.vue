@@ -11,7 +11,7 @@ import TextField from '../../Components/TextField.vue'
 import TextareaField from '../../Components/TextareaField.vue'
 import LineItems from '../../Components/LineItems.vue'
 import { confirmAction, showValidationErrors } from '../../lib/swal'
-import { lineCentavos, useMoney, useVat, vatSplit } from '../../lib/money'
+import { documentTotal, lineCentavos, useMoney, useVat, vatSplit } from '../../lib/money'
 
 /**
  * Offer a customer a price, valid until a date (phase 28).
@@ -43,6 +43,7 @@ const form = useForm({
     customer_id: props.customerId ?? '',
     attention: props.fromQuotation?.attention ?? '',
     valid_until: props.validUntil,
+    mobilization: props.fromQuotation?.mobilization ?? '0.00',
     discount: '0.00',
     notes: props.fromQuotation?.notes ?? '',
     idempotency_key: props.idempotencyKey,
@@ -51,13 +52,14 @@ const form = useForm({
         : [{ product_id: '', unit_id: '', quantity: 1, unit_price: '0.00' }],
 })
 
-const headerFields = ['customer_id', 'attention', 'valid_until', 'discount', 'notes']
+const headerFields = ['customer_id', 'attention', 'valid_until', 'mobilization', 'discount', 'notes']
 
 const subtotal = computed(() =>
     form.lines.reduce((sum, line) => sum + lineCentavos(line.unit_price, line.quantity), 0) / 100
 )
 
-const total = computed(() => Math.max(0, subtotal.value - Number(form.discount ?? 0)))
+// Goods less the discount, plus mobilization (phase 28.1): SaleTotals' sum.
+const total = computed(() => documentTotal(subtotal.value, form.discount, form.mobilization))
 
 const vat = computed(() => vatSplit(total.value, vatRate.value))
 
@@ -181,6 +183,21 @@ async function submit() {
             <section class="card p-5 sm:p-6">
                 <div class="grid gap-5 sm:grid-cols-2">
                     <div class="space-y-5">
+                        <FormField
+                            label="Mobilization"
+                            for="mobilization"
+                            :error="form.errors.mobilization"
+                            hint="Bringing the goods to the site. Added to the total, never discounted."
+                        >
+                            <TextField
+                                id="mobilization"
+                                v-model="form.mobilization"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                :invalid="!!form.errors.mobilization"
+                            />
+                        </FormField>
                         <FormField label="Discount" for="discount" :error="form.errors.discount"
                             hint="Taken off the whole quotation, as on a sale.">
                             <TextField
@@ -207,6 +224,10 @@ async function submit() {
                         <div class="flex items-center justify-between">
                             <dt class="text-xs text-ink-muted">Subtotal</dt>
                             <dd class="tabular-nums text-sm text-ink">{{ money(subtotal) }}</dd>
+                        </div>
+                        <div v-if="Number(form.mobilization) > 0" class="flex items-center justify-between">
+                            <dt class="text-xs text-ink-muted">Mobilization</dt>
+                            <dd class="tabular-nums text-sm text-ink">+{{ money(form.mobilization) }}</dd>
                         </div>
                         <div class="flex items-center justify-between">
                             <dt class="text-xs text-ink-muted">Discount</dt>

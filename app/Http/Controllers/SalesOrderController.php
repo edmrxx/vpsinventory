@@ -135,6 +135,7 @@ class SalesOrderController extends Controller
                 'customer_id' => $quotation->customer_id,
                 'attention' => $quotation->attention,
                 'discount' => number_format((float) $quotation->discount, 2, '.', ''),
+                'mobilization' => number_format((float) $quotation->mobilization, 2, '.', ''),
                 'notes' => $quotation->notes,
                 'lines' => $quotation->lines->map(fn ($line) => [
                     'product_id' => $line->product_id,
@@ -276,6 +277,7 @@ class SalesOrderController extends Controller
                 'attention' => $order->attention,
                 'subtotal' => $order->subtotal,
                 'discount' => $order->discount,
+                'mobilization' => $order->mobilization,
                 'total_amount' => $order->total_amount,
                 'notes' => $order->notes,
                 'created_at' => $order->created_at?->format('d M Y, g:i A'),

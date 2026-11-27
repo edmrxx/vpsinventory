@@ -173,8 +173,10 @@ class DashboardOverview
                 'Receipt',
                 'success',
                 formula: 'Sales = posted sale lines in the period, after each sale\'s '
-                    .'discount, less the refunds on sales returns posted in the same '
-                    .'period. Voided sales count for nothing.',
+                    .'discount, plus any mobilization charged, less the refunds on '
+                    .'sales returns posted in the same period. Narrowed to a category '
+                    .'or a product, mobilization is left out: it is not a product\'s. '
+                    .'Voided sales count for nothing.',
                 href: $this->link('/sales', $period + $staff + ['status' => 'posted']),
             );
 

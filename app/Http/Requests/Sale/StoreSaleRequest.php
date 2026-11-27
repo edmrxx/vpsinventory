@@ -59,6 +59,9 @@ class StoreSaleRequest extends FormRequest
                 Rule::exists('locations', 'id')->where('is_active', true),
             ],
             'discount' => ['nullable', 'numeric', 'min:0', 'max:999999999999.99'],
+            // Phase 28.1: bringing the goods to the site, added after the
+            // discount. The till has none.
+            'mobilization' => ['nullable', 'numeric', 'min:0', 'max:999999999999.99'],
             'notes' => ['nullable', 'string', 'max:1000'],
             // The quotation this sale is made from (phase 28), if any.
             'quotation_id' => ['nullable', 'integer', 'exists:quotations,id'],
@@ -236,6 +239,8 @@ class StoreSaleRequest extends FormRequest
             $validator->errors()->add('pending_payment_id', PendingPaymentException::otherCustomer($pending->reference)->getMessage());
         } elseif ((int) $pending->location_id !== (int) $this->sellingLocation()?->id) {
             $validator->errors()->add('pending_payment_id', PendingPaymentException::otherPlace($pending->reference, (string) $pending->location?->name)->getMessage());
+        } elseif (Quantity::centavos(round((float) $this->input('mobilization', 0), 2)) > 0) {
+            $validator->errors()->add('mobilization', PendingPaymentException::noMobilization($pending->reference)->getMessage());
         } elseif (! PendingPaymentDesk::sameLines($pending, array_values($this->input('lines', [])), UnitConversion::resolve(array_values($this->input('lines', []))), $this->input('discount', 0))) {
             $validator->errors()->add('pending_payment_id', PendingPaymentException::linesChanged($pending->reference)->getMessage());
         }
@@ -260,11 +265,11 @@ class StoreSaleRequest extends FormRequest
      */
     protected function refuseWhatIsNotPaid(Validator $validator): void
     {
-        if ($validator->errors()->has('discount')) {
+        if ($validator->errors()->has('discount') || $validator->errors()->has('mobilization')) {
             return;
         }
 
-        $total = SaleTotals::of($this->input('lines', []), $this->input('discount', 0))['total'];
+        $total = SaleTotals::of($this->input('lines', []), $this->input('discount', 0), $this->input('mobilization', 0))['total'];
         $onAccount = $this->onAccountCents();
         $paid = PaymentSettlement::settleSale($total, $onAccount, $this->paymentsSent());
 
@@ -444,6 +449,7 @@ class StoreSaleRequest extends FormRequest
             && (int) $this->sellingLocation()?->id === (int) $sale->location_id
             && (string) $this->input('sale_date') === $sale->sale_date?->toDateString()
             && number_format((float) $this->input('discount', 0), 2, '.', '') === number_format((float) $sale->discount, 2, '.', '')
+            && number_format((float) $this->input('mobilization', 0), 2, '.', '') === number_format((float) $sale->mobilization, 2, '.', '')
             && $this->onAccountCents() === Quantity::centavos((float) $sale->on_account);
 
         // The days agreed (phase 18.1): a retry with other terms is another
@@ -544,6 +550,7 @@ class StoreSaleRequest extends FormRequest
     {
         $this->merge([
             'discount' => $this->filled('discount') ? $this->input('discount') : 0,
+            'mobilization' => $this->filled('mobilization') ? $this->input('mobilization') : 0,
             'notes' => $this->filled('notes') ? trim((string) $this->input('notes')) : null,
         ]);
     }

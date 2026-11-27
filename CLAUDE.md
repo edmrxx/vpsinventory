@@ -269,6 +269,14 @@ The client's scope (`SCOPE.md`) is being built on top of that, by phase:
     migration is applied locally. No new permission, so a deploy runs
     `migrate`, `config:cache` (a new setting) and needs the new
     `public/build`.
+28.1 **Done.** Mobilization (CR-4, the client's request of 27 November 2026)
+    — a charge for bringing the goods to the site on a quotation, carried to
+    the sales order and the sale: total = subtotal − discount + mobilization,
+    never discounted, never refunded, its own line on Reports, left out of
+    goods figures. Built on the user's GO! on all five recommendations.
+    1,328 PHP tests and 239 front-end tests pass; the migration is applied
+    locally and `inventory:verify` is clean. No new permission or setting, so
+    a deploy runs `migrate` and needs the new `public/build`.
 36. Next: stages 4 and 6 unless the user reorders them; the pending purchase
     quantities on the Stock screen (stage 5's last box) is a small
     follow-up. Each waits on GO!.
@@ -327,7 +335,8 @@ Two services own the figures, and nothing else may work them out again:
   chart, top sellers and low stock. The dashboard and the reports both read
   it, so the two screens cannot disagree.
 
-Net sales is posted sales less returns; net purchases is posted deliveries
+Net sales is posted sales less returns — a sale's total includes its
+mobilization charge (phase 28.1), which every goods figure leaves out; net purchases is posted deliveries
 less returns; a return counts against the month it happened in, not the
 month of the document it undoes; and **opening stock and adjustments are not
 purchases**. A voided document counts for nothing anywhere.
@@ -643,6 +652,33 @@ Decisions already taken for the phases ahead, so they are not reopened:
   Transfers count in no figure — not bought, sold or lost. No API endpoint
   yet. A movement row opens the transfer (`DocumentLink`).
 - A discount is per document, not per line.
+- **A quotation, sales order or sale may carry a mobilization charge**
+  (phase 28.1, CR-4, built on GO! with these defaults). `mobilization` on all
+  three tables, DECIMAL(15,2), 0 for everything before. **total = subtotal −
+  discount + mobilization**: added after the discount, which still never
+  takes more than the goods, so the charge is **never discounted**; typed
+  VAT-inclusive, the VAT split from the whole total. **`SaleTotals::of($lines,
+  $discount, $mobilization)` is the only server sum** (it also returns
+  `goods` = subtotal − discount) and **`documentTotal()` in `lib/money.js`
+  the only screen sum**; `subtotal` stays the goods alone and
+  `Sale::goodsTotal()` is the total less the charge. **Carried** like the
+  discount from a quotation to the sale and the order and from an order to
+  the sale — and, unlike the discount, by *Quote again*; every
+  `matchesSaved()` compares it. **Never refunded**:
+  `SalesReturnPoster::proratedLineTotal()` spreads from the goods total, so a
+  fully returned sale on account still owes the charge. **Every line spread
+  reads the goods total** (`InventoryMetrics::DISCOUNTED_LINE`, used by top
+  sellers, products and categories) — never `total_amount / subtotal` again.
+  It counts in net sales and gross profit (no cost) and has its own Reports
+  line and spreadsheet column; **the dashboard adds it only while nothing
+  narrows to a category or a product** (`MOBILIZATION_LINE`, spread over each
+  sale's lines inside the query it already runs — the query budget does not
+  grow), and narrowed, on account counts only the goods' share
+  (`ON_ACCOUNT_GOODS_LINE`); with no charge every figure is the old one.
+  **The till has none**, and a sale paying a pending payment may not add one
+  (`PendingPaymentException::noMobilization()`, the request and
+  `SalePoster`). Anyone who may make the document may enter it: no limit, no
+  approval, never negative. `tests/Feature/Sales/MobilizationTest.php`.
 - **A sale records how it was paid** (phase 16, decided 9 November 2026 on
   the three recommendations: Cash, GCash, Maya and Bank transfer to start;
   a reference number required for GCash, Maya and Bank; refunds on a sales

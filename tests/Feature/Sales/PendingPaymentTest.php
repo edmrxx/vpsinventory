@@ -3,6 +3,7 @@
 namespace Tests\Feature\Sales;
 
 use App\Enums\PendingPaymentStatus;
+use App\Exceptions\PendingPaymentException;
 use App\Models\Customer;
 use App\Models\Location;
 use App\Models\PaymentMethod;
@@ -11,6 +12,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\User;
 use App\Services\AdjustmentPoster;
+use App\Services\SalePoster;
 use App\Support\Reservations;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -116,6 +118,30 @@ class PendingPaymentTest extends TestCase
             ])->all(),
             'payments' => [['payment_method_id' => $this->cash->id, 'amount' => (string) $pending->total_amount]],
         ], $overrides);
+    }
+
+    public function test_a_sale_paying_a_pending_payment_adds_no_mobilization(): void
+    {
+        // Phase 28.1: the till sends no mobilization charge, so the sale that
+        // pays what it sent adds none — refused by the request, and by the
+        // poster again with the pending payment locked.
+        $pending = $this->sent();
+
+        $this->actingAs($this->admin())
+            ->post('/sales', $this->payment($pending, [
+                'mobilization' => '200.00',
+                'payments' => [['payment_method_id' => $this->cash->id, 'amount' => '1200.00']],
+            ]))
+            ->assertSessionHasErrors('mobilization');
+
+        $this->assertSame(PendingPaymentStatus::Pending, $pending->fresh()->status);
+
+        $this->expectException(PendingPaymentException::class);
+        app(SalePoster::class)->post(
+            ['customer_id' => $pending->customer_id, 'sale_date' => Carbon::today(), 'location_id' => $pending->location_id,
+                'pending_payment_id' => $pending->id, 'mobilization' => '200.00'],
+            $pending->lines->map(fn ($line) => ['product_id' => $line->product_id, 'quantity' => $line->unit_quantity, 'unit_price' => $line->unit_price])->all(),
+        );
     }
 
     public function test_the_kiosk_sends_an_order_that_holds_its_goods_and_moves_nothing(): void

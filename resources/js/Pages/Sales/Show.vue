@@ -174,6 +174,10 @@ async function voidSale() {
                         <dt class="text-xs text-ink-muted">Subtotal</dt>
                         <dd class="tabular-nums text-sm text-ink">{{ money(sale.subtotal) }}</dd>
                     </div>
+                    <div v-if="Number(sale.mobilization) > 0" class="flex items-center justify-between">
+                        <dt class="text-xs text-ink-muted">Mobilization</dt>
+                        <dd class="tabular-nums text-sm text-ink">+{{ money(sale.mobilization) }}</dd>
+                    </div>
                     <div v-if="Number(sale.discount) > 0" class="flex items-center justify-between">
                         <dt class="text-xs text-ink-muted">Discount</dt>
                         <dd class="tabular-nums text-sm text-ink">−{{ money(sale.discount) }}</dd>

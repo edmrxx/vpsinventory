@@ -160,6 +160,7 @@ class ReportBook
                 ->row(['Sales', 'Amount', 'Documents'], Spreadsheet::HEADER)
                 ->row(['Sold', Spreadsheet::money($sales['subtotal']), $sales['documents']])
                 ->row(['Discounts given', Spreadsheet::money(-1 * (float) $sales['discount'])])
+                ->row(['Mobilization charged', Spreadsheet::money($sales['mobilization'])])
                 ->row(['Returned', Spreadsheet::money(-1 * (float) $sales['returns']), $sales['return_documents']])
                 ->row([Spreadsheet::text('Net sales', Spreadsheet::BOLD), Spreadsheet::money($sales['net'], true)]);
 
@@ -208,16 +209,16 @@ class ReportBook
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $header = ['Date', 'Reference', 'Customer', 'Cashier', 'Subtotal', 'Discount', 'Total'];
+        $header = ['Date', 'Reference', 'Customer', 'Cashier', 'Subtotal', 'Discount', 'Mobilization', 'Total'];
         foreach ($methods as $method) {
             $header[] = $method->name;
         }
         $header = array_merge($header, ['On account', 'Still owed'], $withCost ? ['Cost', 'Gross profit'] : []);
 
-        $book->sheet('Sales', array_merge([12, 18, 28, 22, 14, 12, 14], array_fill(0, $methods->count(), 14), [14, 14], $withCost ? [14, 14] : []), true)
+        $book->sheet('Sales', array_merge([12, 18, 28, 22, 14, 12, 14, 14], array_fill(0, $methods->count(), 14), [14, 14], $withCost ? [14, 14] : []), true)
             ->row($header, Spreadsheet::HEADER);
 
-        $sums = array_fill_keys(['subtotal', 'discount', 'total', 'on_account', 'balance_due', 'cost'], 0);
+        $sums = array_fill_keys(['subtotal', 'discount', 'mobilization', 'total', 'on_account', 'balance_due', 'cost'], 0);
         $byMethod = array_fill_keys($methods->pluck('id')->all(), 0);
 
         DB::table('sales')
@@ -226,7 +227,7 @@ class ReportBook
             ->where('sales.status', DocumentStatus::Posted->value)
             ->whereBetween('sales.sale_date', $this->bounds($filters))
             ->tap(fn (Builder $query) => $this->metrics->narrowSales($query, $filters->metrics(), 'sales'))
-            ->select('sales.id', 'sales.reference', 'sales.sale_date', 'sales.subtotal', 'sales.discount',
+            ->select('sales.id', 'sales.reference', 'sales.sale_date', 'sales.subtotal', 'sales.discount', 'sales.mobilization',
                 'sales.total_amount', 'sales.total_cost', 'sales.on_account', 'sales.balance_due')
             ->addSelect('customers.name AS customer', 'users.name AS cashier')
             ->chunkById(500, function ($sales) use ($book, $methods, $withCost, &$sums, &$byMethod) {
@@ -243,6 +244,7 @@ class ReportBook
                         $sale->cashier,
                         Spreadsheet::money($sale->subtotal),
                         Spreadsheet::money($sale->discount),
+                        Spreadsheet::money($sale->mobilization),
                         Spreadsheet::money($sale->total_amount),
                     ];
 
@@ -265,6 +267,7 @@ class ReportBook
 
                     $sums['subtotal'] += (float) $sale->subtotal;
                     $sums['discount'] += (float) $sale->discount;
+                    $sums['mobilization'] += (float) $sale->mobilization;
                     $sums['total'] += (float) $sale->total_amount;
                     $sums['on_account'] += (float) $sale->on_account;
                     $sums['balance_due'] += (float) $sale->balance_due;
@@ -275,6 +278,7 @@ class ReportBook
         $total = [Spreadsheet::text('Total', Spreadsheet::BOLD), null, null, null,
             Spreadsheet::money(round($sums['subtotal'], 2), true),
             Spreadsheet::money(round($sums['discount'], 2), true),
+            Spreadsheet::money(round($sums['mobilization'], 2), true),
             Spreadsheet::money(round($sums['total'], 2), true)];
         foreach ($methods as $method) {
             $total[] = Spreadsheet::money(round($byMethod[$method->id], 2), true);

@@ -108,6 +108,10 @@ const details = computed(() => [
                     <span v-else class="font-mono">{{ order.quotation.reference }}</span>.
                 </p>
                 <dl class="mt-6 space-y-2 rounded-field bg-surface-sunken p-4">
+                    <div v-if="Number(order.mobilization) > 0" class="flex items-center justify-between">
+                        <dt class="text-xs text-ink-muted">Mobilization</dt>
+                        <dd class="tabular-nums text-sm text-ink">+{{ money(order.mobilization) }}</dd>
+                    </div>
                     <div v-if="Number(order.discount) > 0" class="flex items-center justify-between">
                         <dt class="text-xs text-ink-muted">Discount</dt>
                         <dd class="tabular-nums text-sm text-ink">−{{ money(order.discount) }}</dd>

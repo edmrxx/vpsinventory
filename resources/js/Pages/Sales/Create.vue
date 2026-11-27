@@ -13,7 +13,7 @@ import LineItems from '../../Components/LineItems.vue'
 import PaymentEntry from '../../Components/PaymentEntry.vue'
 import { creditHintFor } from '../../lib/payments'
 import { confirmAction, showValidationErrors } from '../../lib/swal'
-import { lineCentavos, useMoney, useVat, vatSplit } from '../../lib/money'
+import { documentTotal, lineCentavos, useMoney, useVat, vatSplit } from '../../lib/money'
 
 defineOptions({ layout: AppLayout })
 
@@ -60,6 +60,7 @@ const form = useForm({
     sale_date: props.dates.today ?? '',
     // Where the goods leave the shelf (phase 31.4).
     location_id: props.locationId ?? '',
+    mobilization: source?.mobilization ?? '0.00',
     discount: source?.discount ?? '0.00',
     notes: source?.notes ?? '',
     idempotency_key: props.idempotencyKey,
@@ -97,7 +98,7 @@ watch(
     }
 )
 
-const headerFields = ['customer_id', 'sale_date', 'location_id', 'discount', 'notes', 'quotation_id', 'sales_order_id']
+const headerFields = ['customer_id', 'sale_date', 'location_id', 'mobilization', 'discount', 'notes', 'quotation_id', 'sales_order_id']
 
 // Another place: fetch the products again with that place's figures, so
 // "on hand" and the stock warning are about where the goods really leave.
@@ -119,7 +120,8 @@ const subtotal = computed(() =>
     form.lines.reduce((sum, line) => sum + lineCentavos(line.unit_price, line.quantity), 0) / 100
 )
 
-const total = computed(() => Math.max(0, subtotal.value - Number(form.discount ?? 0)))
+// Goods less the discount, plus mobilization (phase 28.1): SaleTotals' sum.
+const total = computed(() => documentTotal(subtotal.value, form.discount, form.mobilization))
 
 const vat = computed(() => vatSplit(total.value, vatRate.value))
 
@@ -292,26 +294,47 @@ async function submit() {
             <!-- What it comes to -->
             <section class="card p-5 sm:p-6">
                 <div class="grid gap-5 sm:grid-cols-2">
-                    <FormField
-                        label="Discount"
-                        for="discount"
-                        :error="form.errors.discount"
-                        hint="Taken off the whole sale, not a single line."
-                    >
-                        <TextField
-                            id="discount"
-                            v-model="form.discount"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            :invalid="!!form.errors.discount"
-                        />
-                    </FormField>
+                    <div class="space-y-5">
+                        <FormField
+                            label="Mobilization"
+                            for="mobilization"
+                            :error="form.errors.mobilization"
+                            hint="Bringing the goods to the site. Added to the total, never discounted."
+                        >
+                            <TextField
+                                id="mobilization"
+                                v-model="form.mobilization"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                :invalid="!!form.errors.mobilization"
+                            />
+                        </FormField>
+                        <FormField
+                            label="Discount"
+                            for="discount"
+                            :error="form.errors.discount"
+                            hint="Taken off the whole sale, not a single line."
+                        >
+                            <TextField
+                                id="discount"
+                                v-model="form.discount"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                :invalid="!!form.errors.discount"
+                            />
+                        </FormField>
+                    </div>
 
                     <dl class="space-y-2 self-end rounded-field bg-surface-sunken p-4">
                         <div class="flex items-center justify-between">
                             <dt class="text-xs text-ink-muted">Subtotal</dt>
                             <dd class="tabular-nums text-sm text-ink">{{ money(subtotal) }}</dd>
+                        </div>
+                        <div v-if="Number(form.mobilization) > 0" class="flex items-center justify-between">
+                            <dt class="text-xs text-ink-muted">Mobilization</dt>
+                            <dd class="tabular-nums text-sm text-ink">+{{ money(form.mobilization) }}</dd>
                         </div>
                         <div class="flex items-center justify-between">
                             <dt class="text-xs text-ink-muted">Discount</dt>

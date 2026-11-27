@@ -99,6 +99,7 @@ class SalesReturnController extends Controller
                 'sale_date' => $sale->sale_date?->format('d M Y'),
                 'subtotal' => $sale->subtotal,
                 'discount' => $sale->discount,
+                'mobilization' => $sale->mobilization,
                 'total_amount' => $sale->total_amount,
                 'balance_due' => $sale->balance_due,
                 'lines' => $sale->lines->map(fn ($line) => [

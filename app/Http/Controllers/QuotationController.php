@@ -241,6 +241,7 @@ class QuotationController extends Controller
                 'attention' => $quotation->attention,
                 'subtotal' => $quotation->subtotal,
                 'discount' => $quotation->discount,
+                'mobilization' => $quotation->mobilization,
                 'total_amount' => $quotation->total_amount,
                 // A string, so the page and the dialog's JSON read the same.
                 'vat_rate' => number_format($rate, 2, '.', ''),
@@ -368,6 +369,9 @@ class QuotationController extends Controller
             'customer_id' => $source->customer_id,
             'attention' => $source->attention,
             'notes' => $source->notes,
+            // A charge for bringing the goods to the site, not a price, so it
+            // carries over; the discount does not (phase 28.1).
+            'mobilization' => number_format((float) $source->mobilization, 2, '.', ''),
             'lines' => $lines,
             'dropped' => $dropped,
         ];

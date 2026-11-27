@@ -143,6 +143,7 @@ class SaleController extends Controller
                 'customer' => $quotation->customer?->name,
                 'valid_until' => $quotation->valid_until?->format('d M Y'),
                 'discount' => number_format((float) $quotation->discount, 2, '.', ''),
+                'mobilization' => number_format((float) $quotation->mobilization, 2, '.', ''),
                 'notes' => $quotation->notes,
                 'lines' => $quotation->lines->map(fn ($line) => [
                     'product_id' => $line->product_id,
@@ -186,6 +187,7 @@ class SaleController extends Controller
                 'reserve_until' => $order->reserve_until?->format('d M Y'),
                 'expired' => $order->isExpired(),
                 'discount' => number_format((float) $order->discount, 2, '.', ''),
+                'mobilization' => number_format((float) $order->mobilization, 2, '.', ''),
                 'notes' => $order->notes,
                 'lines' => $order->lines->map(fn ($line) => [
                     'product_id' => $line->product_id,
@@ -407,6 +409,7 @@ class SaleController extends Controller
                 'status_tone' => $sale->status->tone(),
                 'subtotal' => $sale->subtotal,
                 'discount' => $sale->discount,
+                'mobilization' => $sale->mobilization,
                 'total_amount' => $sale->total_amount,
                 'vat_rate' => Vat::rateLabel($rate),
                 'net_amount' => $vat['net'],

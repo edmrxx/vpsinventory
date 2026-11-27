@@ -264,7 +264,7 @@ class ReportFiltersAndExportTest extends TestCase
         // One row per sale, under a header, with a total that is the screen's.
         $sales = $book['Sales'];
         $header = $sales[0];
-        $this->assertSame(['Date', 'Reference', 'Customer', 'Cashier', 'Subtotal', 'Discount', 'Total'], array_slice($header, 0, 7));
+        $this->assertSame(['Date', 'Reference', 'Customer', 'Cashier', 'Subtotal', 'Discount', 'Mobilization', 'Total'], array_slice($header, 0, 8));
         $this->assertContains('GCash', $header);
         $this->assertContains('Cost', $header);
         $this->assertCount(4, $sales); // header, two sales, total
